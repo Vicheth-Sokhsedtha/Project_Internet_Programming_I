@@ -1,68 +1,88 @@
 <template>
   <div class="cart-item">
+    <img :src="item.image" alt="Dress" class="thumb" />
     <div class="info">
-      <span class="name">{{ item.name }}</span>
-      <span class="price">${{ item.price.toFixed(2) }}</span>
-    </div>
+      <p class="name">{{ item.name }}</p>
+      <p>Size: {{ item.size }}</p>
 
+      <p class="price">${{ item.price.toFixed(2) }} each</p>
+    </div>
     <div class="controls">
       <div class="qty">
-        <button class="qty-btn" @click="decrease">-</button>
-        <span class="qty-value">{{ item.qty }}</span>
-        <button class="qty-btn" @click="increase">+</button>
+        <p>Quality: {{ item.quality  }}</p>
+        <div class="qty-box">
+          <button class="qty-btn" @click="decreaseQty">-</button>
+          <span class="qty-value">{{ item.qty }}</span>
+          <button class="qty-btn" @click="increaseQty">+</button>
+        </div>
+
+
       </div>
-
-      <span class="total">${{ (item.price * item.qty).toFixed(2) }}</span>
-
-      <button class="btn-cancel" @click="$emit('remove', item.id)">Cancel</button>
+      <p class="total">${{ (item.price * item.qty).toFixed(2) }}</p>
+      <button class="btn-cancel" @click="$emit('remove', item.id)">Remove</button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent, PropType } from 'vue';
+import type { CartItem } from '../stores/cart';
 
 export default defineComponent({
   name: 'CartItem',
   props: {
     item: {
-      type: Object as PropType<{ id: number; name: string; price: number; qty: number }>,
+      type: Object as PropType<CartItem>,
       required: true
     }
   },
   emits: ['update:qty', 'remove'],
-  setup(props, { emit }) {
-    const increase = () => emit('update:qty', props.item.id, props.item.qty + 1);
-    const decrease = () => emit('update:qty', props.item.id, Math.max(1, props.item.qty - 1));
-    return { increase, decrease };
+  methods: {
+    increaseQty() {
+      this.$emit('update:qty', this.item.id, this.item.qty + 1);
+    },
+    decreaseQty() {
+      if (this.item.qty > 1) {
+        this.$emit('update:qty', this.item.id, this.item.qty - 1);
+      }
+    }
   }
 });
 </script>
 
 <style scoped>
 .cart-item {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
   border: 1px solid #eee;
   border-radius: 10px;
   padding: 12px 14px;
   background: #fafafa;
   color: black;
+  align-items: center;
+  background-color: rgba(243, 173, 173, 0.19);
+}
+
+.thumb {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 .info {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
+  flex: 1;
 }
 
 .name {
   font-weight: 700;
+  margin-bottom: 4px;
 }
 
 .price {
   color: #555;
+  margin: 4px 0;
 }
 
 .controls {
@@ -72,6 +92,13 @@ export default defineComponent({
 }
 
 .qty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.qty-box{
   display: flex;
   align-items: center;
   gap: 8px;
@@ -95,10 +122,12 @@ export default defineComponent({
 
 .total {
   font-weight: 700;
+  min-width: 80px;
+  text-align: right;
 }
 
 .btn-cancel {
-  background: #dc3545; /* red */
+  background: #dc3545;
   color: #fff;
   border: none;
   border-radius: 8px;
