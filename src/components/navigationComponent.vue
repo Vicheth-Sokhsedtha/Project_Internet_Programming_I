@@ -17,7 +17,7 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/" class="nav-link" active-class="active">
+            <router-link to="/product" class="nav-link" active-class="active">
               Product
             </router-link>
           </li>
@@ -50,10 +50,11 @@
         </router-link>
 
         <!-- Login/Logout button -->
-        <button class="login-btn" @click="handleAuthClick">
-          {{ isLoggedIn ? 'Logout' : 'Login' }}
-        </button>
-
+        <router-link to="/login">
+          <button class="login-btn" @click="handleAuthClick">
+            {{ isLoggedIn ? 'Logout' : 'Login' }}
+          </button>
+        </router-link>
         <!-- Mobile Menu Toggle -->
         <button class="mobile-toggle" @click="toggleMobileMenu">
           <span class="hamburger" :class="{ 'active': mobileMenuOpen }">

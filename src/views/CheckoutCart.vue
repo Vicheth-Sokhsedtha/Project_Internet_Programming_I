@@ -3,7 +3,7 @@
     <h2>Items</h2>
     <div v-if="cartStore.items.length === 0" class="empty-cart">
       <p>No items in cart</p>
-      <button @click="goToProductDetail" class="btn-add-products">Add Products</button>
+      <button @click="goToProductPage" class="btn-add-products">Add Products</button>
     </div>
     <div v-else>
 
@@ -94,8 +94,8 @@ export default defineComponent({
       router.push({ name: 'Cart' });
     };
 
-    const goToProductDetail = () => {
-      router.push({ name: 'ProductDetail' });
+    const goToProductPage = () => {
+      router.push({ name: 'product' });
     };
 
     return {
@@ -106,7 +106,7 @@ export default defineComponent({
       handleFileUpload,
       pay,
       goToCart,
-      goToProductDetail
+      goToProductPage
     };
   }
 });

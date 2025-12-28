@@ -60,6 +60,9 @@ export const useCartStore = defineStore('cart', () => {
     items.value.reduce((count, item) => count + item.qty, 0)
   );
 
+  const getProductById = (id: number) => { return items.value.find(p => p.id === id); };
+  // return { items, addItem, clearCart, getProductById };
+
   return {
     items,
     subtotal,
@@ -67,6 +70,7 @@ export const useCartStore = defineStore('cart', () => {
     addItem,
     updateQty,
     removeItem,
-    clearCart
+    clearCart,
+    getProductById
   };
 });

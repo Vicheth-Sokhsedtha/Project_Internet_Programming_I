@@ -3,7 +3,7 @@
     <h1>Your Cart</h1>
     <div v-if="cartStore.items.length === 0" class="empty-cart">
       <p>Your cart is empty</p>
-      <button @click="goToProductDetail" class="btn-add-products">Add Products</button>
+      <button @click="goToProductPage" class="btn-add-products">Add Products</button>
     </div>
     <div v-else>
       <CartItem
@@ -16,7 +16,7 @@
       <div class="cart-summary">
         <p><strong>Subtotal:</strong> ${{ cartStore.subtotal.toFixed(2) }}</p>
         <div class="cart-actions">
-          <button @click="goToProductDetail" class="btn-update">Update Products</button>
+          <button @click="goToProductPage"  class="btn-update">Update Products</button>
           <button @click="goToCheckout" class="btn-checkout">Proceed to Checkout</button>
         </div>
       </div>
@@ -37,17 +37,17 @@ export default defineComponent({
     const router = useRouter();
     const cartStore = useCartStore();
 
-    const goToProductDetail = () => {
-      router.push({ name: 'ProductDetail' });
+    const goToProductPage = () => {
+      router.push({ name: 'product' }); // ✅ product listing page
     };
 
     const goToCheckout = () => {
-      router.push({ name: 'Checkout' });
+      router.push({ name: 'checkout' });
     };
 
     return {
       cartStore,
-      goToProductDetail,
+      goToProductPage,
       goToCheckout
     };
   }
