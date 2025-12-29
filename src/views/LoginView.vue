@@ -1,299 +1,249 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'   // ✅ Import Vue Router
+import type { LoginData } from '../types'
+
+// Emits (still useful if parent listens)
+const emit = defineEmits(['switch-page', 'successful-login'])
+
+const router = useRouter()   // ✅ Router instance
+
+// --- State for password visibility ---
+const passwordVisible = ref(false)
+
+const loginData = ref<LoginData>({
+  username: '',
+  email: '',
+  password: '',
+})
+
+const submitted = ref(false)
+
+const isFormValid = computed(() => {
+  return (
+    loginData.value.username.trim() !== '' &&
+    loginData.value.email.trim() !== '' &&
+    loginData.value.password.trim() !== ''
+  )
+})
+
+const handleLogin = () => {
+  submitted.value = true
+
+  if (isFormValid.value) {
+    console.log('Login Successful:', loginData.value)
+
+    // Emit successful-login event to parent
+    emit('successful-login')
+
+    // ✅ Navigate to Home page
+    router.push({ name: 'home' })
+
+    // Clear form
+    loginData.value = {
+      username: '',
+      email: '',
+      password: '',
+    }
+    submitted.value = false
+  } else {
+    console.error('Login Failed: Please fill in all fields.')
+  }
+}
+
+const togglePasswordVisibility = () => {
+  passwordVisible.value = !passwordVisible.value
+}
+
+const goToSignup = () => {
+  // ✅ Navigate to Signup page
+  router.push({ name: 'signup' })
+  // Optionally still emit event
+  emit('switch-page', 'signup')
+}
+</script>
+
 <template>
-  <div class="auth-page">
-    <div class="auth-container">
-      <div class="auth-card">
-        <div class="auth-header">
-          <h1>Welcome Back</h1>
-          <p>Sign in to your S3DStyle account</p>
+  <div class="login-page-container">
+    <div class="welcome-section">
+      <h2 class="welcome-title">Welcome back!</h2>
+      <p class="welcome-text">
+        Log in to continue enjoying exclusive offers, rewards, and discounts waiting for you.
+      </p>
+    </div>
+
+    <div class="form-section">
+      <h2 class="form-title">Log In</h2>
+      <form @submit.prevent="handleLogin" class="auth-form">
+        <label for="login-username">Username</label>
+        <input
+          id="login-username"
+          v-model="loginData.username"
+          type="text"
+          placeholder="Enter username"
+          :class="{ 'input-error': submitted && loginData.username.trim() === '' }"
+        />
+
+        <label for="login-email">Email</label>
+        <input
+          id="login-email"
+          v-model="loginData.email"
+          type="email"
+          placeholder="Enter email"
+          :class="{ 'input-error': submitted && loginData.email.trim() === '' }"
+        />
+
+        <label for="login-password">Password</label>
+        <div class="password-input-wrapper">
+          <input
+            id="login-password"
+            v-model="loginData.password"
+            :type="passwordVisible ? 'text' : 'password'"
+            placeholder="Enter password"
+            :class="{ 'input-error': submitted && loginData.password.trim() === '' }"
+          />
+          <span
+            class="password-toggle"
+            @click="togglePasswordVisibility"
+            :class="{ 'icon-open': passwordVisible, 'icon-closed': !passwordVisible }"
+          ></span>
         </div>
 
-        <form @submit.prevent="handleLogin" class="auth-form">
-          <div class="form-group">
-            <label for="email">Email Address</label>
-            <input
-              id="email"
-              v-model="formData.email"
-              type="email"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
+        <p v-if="submitted && !isFormValid" class="error-message">
+          ⚠️ Please fill out all required fields.
+        </p>
 
-          <div class="form-group">
-            <label for="password">Password</label>
-            <input
-              id="password"
-              v-model="formData.password"
-              type="password"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
+        <button type="submit" class="submit-button">Log In</button>
+      </form>
 
-          <div class="form-options">
-            <label class="checkbox-label">
-              <input type="checkbox" v-model="rememberMe" />
-              <span>Remember me</span>
-            </label>
-            <a href="#" class="forgot-link">Forgot password?</a>
-          </div>
-
-          <button type="submit" class="submit-btn">Sign In</button>
-
-          <div class="divider">
-            <span>or</span>
-          </div>
-
-          <button type="button" class="social-btn google">
-            <span>🔍</span> Continue with Google
-          </button>
-
-          <p class="switch-text">
-            Don't have an account?
-            <router-link to="/signup" class="switch-link">Sign up</router-link>
-          </p>
-        </form>
-      </div>
+      <p class="signup-link">
+        Don't have an account?
+        <!-- ✅ Use goToSignup -->
+        <a href="#" class="link" @click.prevent="goToSignup">Sign Up</a>
+      </p>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-
-const router = useRouter();
-
-const formData = ref({
-  email: '',
-  password: ''
-});
-
-const rememberMe = ref(false);
-
-const handleLogin = () => {
-  // Basic validation
-  if (!formData.value.email || !formData.value.password) {
-    alert('Please fill in all fields');
-    return;
-  }
-
-  // Store login state
-  localStorage.setItem('isLoggedIn', 'true');
-  localStorage.setItem('userEmail', formData.value.email);
-
-  // Redirect to products page
-  router.push('/products');
-};
-</script>
 
 <style scoped>
-.auth-page {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+/* Standard Styles (consistent across components) */
+.login-page-container {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  max-width: 800px;
+  margin: 40px auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: #fff;
 }
 
-.auth-container {
-  width: 100%;
-  max-width: 450px;
-}
-
-.auth-card {
-  background: white;
-  border-radius: 20px;
+.welcome-section {
+  flex: 1;
   padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.6s ease-out;
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.auth-header {
+  background-color: #c9b59c;
   text-align: center;
-  margin-bottom: 30px;
-}
-
-.auth-header h1 {
-  font-size: 32px;
-  font-weight: 700;
-  color: #2c3e50;
-  margin: 0 0 10px;
-  font-family: "Playfair Display", serif;
-}
-
-.auth-header p {
-  color: #7f8c8d;
-  font-size: 16px;
-  margin: 0;
-}
-
-.auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  justify-content: center;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group label {
-  font-weight: 600;
-  color: #2c3e50;
-  font-size: 14px;
-}
-
-.form-group input {
-  padding: 14px 16px;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 15px;
-  transition: all 0.3s ease;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.form-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #555;
-}
-
-.checkbox-label input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.forgot-link {
-  color: #667eea;
-  text-decoration: none;
-  font-size: 14px;
+.welcome-title {
+  font-size: 24px;
   font-weight: 500;
-  transition: color 0.3s ease;
+  margin-bottom: 10px;
 }
 
-.forgot-link:hover {
-  color: #764ba2;
+.form-section {
+  flex: 1;
+  padding: 40px;
 }
 
-.submit-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.form-title {
+  font-size: 32px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.auth-form label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+  font-size: 16px;
+}
+
+.input-error {
+  border-color: #d9534f !important;
+  box-shadow: 0 0 0 1px #d9534f;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Eye Open Icon (Show Password) */
+.icon-open {
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0a0a0'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zm0 12c-2.48 0-4.5-2.02-4.5-4.5s2.02-4.5 4.5-4.5 4.5 2.02 4.5 4.5-2.02 4.5-4.5 4.5zm0-7c-1.38 0-2.5 1.12-2.5 2.5s1.12 2.5 2.5 2.5 2.5-1.12 2.5-2.5-1.12-2.5-2.5-2.5z'/%3E%3C/svg%3E");
+}
+
+/* Eye Closed Icon (Hide Password) */
+.icon-closed {
+  content: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0a0a0'%3E%3Cpath d='M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.72-2.89 3.49-4.8c-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16c.57-.23 1.18-.36 1.83-.36zm-8.82 8.82L3 18.28l-1.44-1.44-.73-.73 1.44-1.44 2.37-2.37L1 5.27l1.41-1.41 18.3 18.3-1.41 1.41-4.9-4.9c-1.02.37-2.16.6-3.35.6-5 0-9.27-3.11-11-7.5 1.09-2.72 3.55-4.81 6.38-5.71l-1.42-1.42c-2.88 1.02-5.45 3.1-7.44 5.71L1 12l2.18 2.18zM12 10.15c-.48 0-.91.13-1.29.35l2.49 2.49c.22-.38.35-.81.35-1.29 0-1.38-1.12-2.5-2.5-2.5z'/%3E%3C/svg%3E");
+}
+
+.submit-button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 30px;
+  background-color: #d4a267;
   color: white;
   border: none;
-  padding: 16px;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: 4px;
+  font-size: 18px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 10px;
+  transition: background-color 0.3s;
 }
 
-.submit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+.submit-button:hover {
+  background-color: #c49463;
 }
 
-.divider {
-  text-align: center;
-  position: relative;
-  margin: 10px 0;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 40%;
-  height: 1px;
-  background: #e0e0e0;
-}
-
-.divider::before {
-  left: 0;
-}
-
-.divider::after {
-  right: 0;
-}
-
-.divider span {
-  background: white;
-  padding: 0 15px;
-  color: #999;
+.error-message {
+  color: #d9534f;
+  margin-top: 15px;
   font-size: 14px;
-}
-
-.social-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 14px;
-  border: 2px solid #e0e0e0;
-  background: white;
-  border-radius: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.social-btn:hover {
-  border-color: #667eea;
-  background: #f8f9ff;
-  transform: translateY(-2px);
-}
-
-.social-btn span {
-  font-size: 20px;
-}
-
-.switch-text {
   text-align: center;
-  color: #7f8c8d;
-  font-size: 14px;
-  margin-top: 10px;
 }
 
-.switch-link {
-  color: #667eea;
+.signup-link {
+  text-align: center;
+  margin-top: 15px;
+  font-size: 14px;
+  color: #666;
+}
+
+.signup-link .link {
+  color: #d8a776;
   text-decoration: none;
-  font-weight: 600;
-  transition: color 0.3s ease;
-}
-
-.switch-link:hover {
-  color: #764ba2;
+  font-weight: 500;
 }
 </style>

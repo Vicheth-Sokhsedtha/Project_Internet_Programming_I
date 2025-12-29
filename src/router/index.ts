@@ -22,7 +22,7 @@ const routes = [
   },
   {
     path: '/checkout',
-    name: 'Checkout',
+    name: 'checkout',
     component: CheckoutCart
   },
   {
