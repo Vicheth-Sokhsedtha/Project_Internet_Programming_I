@@ -1,42 +1,64 @@
 <template>
   <div class="page">
+    <SearchBar @search="handleSearch" />
 
+    <!-- Show search results only when searching -->
+    <div v-if="searchQuery">
+      <div class="search-results-header">
+        <h3>Search Results for "{{ searchQuery }}" ({{ filteredProducts.length }} items)</h3>
+      </div>
 
-    <SearchBar />
-    <CategoryTabs />
-
-    <section class="hero">
-  <div class="hero-text">
-    <h1>Make you look</h1>
-    <h1 class="bold">Beautiful and</h1>
-    <h1 class="bold">Dignified.</h1>
-  </div>
-
-  <img src="/image/image 1.png" class="image-1-img" />
-</section>
-
-
-    <div class="discount-bar">
-    <h2 class="discount-title">Up to 50% Discount</h2>
+      <ProductSection
+        v-if="filteredProducts.length > 0"
+        title="Search Results"
+        :items="filteredProducts"
+      />
+      <div v-else class="no-results">
+        <p>No products found for "{{ searchQuery }}"</p>
+      </div>
     </div>
 
+    <!-- Show normal page only when NOT searching -->
+    <div v-else>
+      <section class="hero">
+        <div class="hero-text">
+          <h1>Make you look</h1>
+          <h1 class="bold">Beautiful and</h1>
+          <h1 class="bold">Dignified.</h1>
+        </div>
+        <img src="/image/image 1.png" class="image-1-img" />
+      </section>
 
-    <ProductSection title="" :items="discountProducts" />
-    <ProductSection title="Dress" :items="dress" />
-    <ProductSection title="T-Shirts & Shirt" :items="tshirts" />
-    <ProductSection title="Jacket & Hoodie" :items="jacket" />
-    <ProductSection title="Crop Top" :items="cropTop" />
-    <ProductSection title="Shorts" :items="shorts" />
-    <ProductSection title="Skirts" :items="skirts" />
+      <div>
+        <CategoryTabs
+          :discountProducts="discountProducts"
+          :dress="dress"
+          :tshirts="tshirts"
+          :jacket="jacket"
+          :cropTop="cropTop"
+          :shorts="shorts"
+          :skirts="skirts"
+          @selectCategory="handleCategorySelect"
+        />
+      </div>
 
+      <div class="discount-bar">
+        <h2 class="discount-title">Up to 50% Discount</h2>
+      </div>
 
-
-
+      <ProductSection title="" :items="discountProducts" />
+      <ProductSection title="Dress" :items="dress" />
+      <ProductSection title="T-Shirts & Shirt" :items="tshirts" />
+      <ProductSection title="Jacket & Hoodie" :items="jacket" />
+      <ProductSection title="Crop Top" :items="cropTop" />
+      <ProductSection title="Shorts" :items="shorts" />
+      <ProductSection title="Skirts" :items="skirts" />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-
+import { ref, computed } from "vue";
 import SearchBar from "../components/SearchBar.vue";
 import CategoryTabs from "../components/CategoryTabs.vue";
 import ProductSection from "../components/ProductSection.vue";
@@ -48,6 +70,8 @@ interface Product {
   oldPrice?: number;
   image: string;
 }
+
+// Product data arrays
 const discountProducts: Product[] = [
   { id: 1, name: "Working dress", oldPrice: 30.00, price: 15.00, image: "/image/popupar 37.png" },
   { id: 2, name: "T-shirt Coffee", oldPrice: 20.00, price: 10.00, image: "/image/popupar 37.png" },
@@ -125,6 +149,44 @@ const skirts: Product[] = [
   { id: 8, name: "Working Pants", oldPrice: 20.00, price: 15.00, image: "/image/popupar 95.png" },
 ];
 
+// --- Search state ---
+const searchQuery = ref("");
+
+// Handle search event
+function handleSearch(query: string) {
+  searchQuery.value = query;
+}
+
+// Handle category tab selection
+function handleCategorySelect(category: string) {
+  // When selecting a category, show those products as "search results"
+  searchQuery.value = category;
+}
+
+// Combine ALL products from ALL categories for searching
+const allProducts = computed(() => {
+  return [
+    ...discountProducts,
+    ...dress,
+    ...tshirts,
+    ...jacket,
+    ...cropTop,
+    ...shorts,
+    ...skirts
+  ];
+});
+
+// Filter products from ALL categories based on search query
+const filteredProducts = computed(() => {
+  if (!searchQuery.value) return [];
+
+  const query = searchQuery.value.toLowerCase();
+
+  // Search in ALL products from ALL categories
+  return allProducts.value.filter(product =>
+    product.name.toLowerCase().includes(query)
+  );
+});
 </script>
 
 <style scoped>
@@ -136,21 +198,17 @@ const skirts: Product[] = [
   padding: 0;
   overflow-x: hidden;
   color: #000000;
-
 }
 
-
-/* HERO SECTION (Make you look beautiful...) */
 .hero {
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 80px 120px; /* bigger like your Figma */
+  padding: 80px 120px;
   box-sizing: border-box;
 }
 
-/* Left Text */
 .hero-text {
   max-width: 520px;
 }
@@ -164,24 +222,25 @@ const skirts: Product[] = [
 }
 
 .hero-text h1:first-child {
-  color: #ffffff; /* First line white */
+  color: #ffffff;
 }
 
 .hero-text .bold {
-  color: #000000; /* Other lines black */
+  color: #000000;
 }
 
-/* Models Image */
 .image-1-img {
-  width: 720px; /* Bigger like your Figma */
+  width: 720px;
   height: auto;
   object-fit: contain;
 }
+
 .discount-bar {
   width: 100%;
   background: white;
   padding: 40px 0;
 }
+
 .discount-title {
   text-align: center;
   font-size: 48px;
@@ -191,8 +250,23 @@ const skirts: Product[] = [
   margin: 2px 0 2px;
 }
 
+/* Search results styles */
+.search-results-header {
+  text-align: center;
+  padding: 40px 20px 20px;
+  font-family: "Playfair Display", serif;
+  font-size: 28px;
+  color: #333;
+}
 
-/* Make everything scale nicely */
+.no-results {
+  text-align: center;
+  padding: 80px 40px;
+  font-family: "Playfair Display", serif;
+  font-size: 24px;
+  color: #666;
+}
+
 @media (max-width: 1000px) {
   .hero {
     flex-direction: column;
@@ -204,73 +278,4 @@ const skirts: Product[] = [
     width: 90%;
   }
 }
-.full-footer {
-  background: #d1bfa9;
-  padding: 60px 80px;
-  font-family: "Playfair Display", serif;
-}
-
-.footer-container {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr;
-  gap: 40px;
-}
-
-.footer-logo {
-  font-size: 34px;
-  font-weight: 600;
-}
-
-.footer-text {
-  margin-top: 15px;
-  font-size: 16px;
-  line-height: 1.5;
-  max-width: 280px;
-}
-
-.footer-copy {
-  margin-top: 50px;
-  font-size: 14px;
-}
-
-.footer-links h3,
-.footer-message h3 {
-  font-size: 20px;
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-.footer-links ul {
-  list-style: none;
-  padding: 0;
-}
-
-.footer-links li {
-  margin: 6px 0;
-  cursor: pointer;
-}
-
-.msg-box {
-  width: 180px;
-  height: 140px;
-  background: #e0d8d0;
-  border-radius: 10px;
-  margin-bottom: 20px;
-}
-
-.footer-icons img {
-  width: 28px;
-  margin-right: 10px;
-  cursor: pointer;
-}
-
-.footer-bottom {
-  text-align: center;
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid #b5a999;
-  font-size: 14px;
-}
-
-
 </style>
