@@ -60,7 +60,14 @@ const routes = [
     path: '/signup',
     name: 'signup',
     component: SignUpView
-  }
+  },
+  { path: "/about-section", name: "about-section", component: AboutView },
+  { path: "/contact-section", name: "contact-section", component: EndpageView },
+  // {
+  // path: '/productsection/:title',
+  // name: 'Productsection',
+  // component: () => import('../components/ProductSection.vue')
+  // }
 
 ];
 
@@ -68,5 +75,6 @@ const router = createRouter({
   history: createWebHistory(),
   routes
 });
+
 
 export default router;

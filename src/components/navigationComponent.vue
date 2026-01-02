@@ -74,17 +74,17 @@
             </router-link>
           </li>
           <li class="mobile-nav-item">
-            <router-link to="/" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
+            <router-link to="/product" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
               Product
             </router-link>
           </li>
           <li class="mobile-nav-item">
-            <router-link to="/about" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
+            <router-link to="/about-section" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
               About
             </router-link>
           </li>
           <li class="mobile-nav-item">
-            <router-link to="/contact" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
+            <router-link to="/contact-section" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
               Contact
             </router-link>
           </li>

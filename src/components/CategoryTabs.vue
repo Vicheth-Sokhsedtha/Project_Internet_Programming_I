@@ -1,6 +1,8 @@
 <template>
   <div>
+
     <div class="tabs">
+
       <button
         v-for="tab in tabs"
         :key="tab"
@@ -11,6 +13,15 @@
         {{ tab }}
       </button>
     </div>
+
+    <section class="hero">
+        <div class="hero-text">
+          <h1>Make you look</h1>
+          <h1 class="bold">Beautiful and</h1>
+          <h1 class="bold">Dignified.</h1>
+        </div>
+        <img src="/image/image 1.png" class="image-1-img" />
+    </section>
 
     <!-- Show product sections based on active tab -->
     <ProductSection
@@ -48,6 +59,8 @@
       title="Skirts"
       :items="props.skirts"
     />
+
+
   </div>
 </template>
 
@@ -94,5 +107,40 @@ const activeTab = ref("All");
 .tab-btn.active {
   background: #000;
   color: white;
+}
+
+.hero {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 80px 120px;
+  box-sizing: border-box;
+}
+
+.hero-text {
+  max-width: 520px;
+}
+
+.hero-text h1 {
+  font-family: "Playfair Display", serif;
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.05;
+  margin: 0;
+}
+
+.hero-text h1:first-child {
+  color: #ffffff;
+}
+
+.hero-text .bold {
+  color: #000000;
+}
+
+.image-1-img {
+  width: 720px;
+  height: auto;
+  object-fit: contain;
 }
 </style>

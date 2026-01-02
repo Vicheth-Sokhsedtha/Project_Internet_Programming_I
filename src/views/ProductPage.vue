@@ -20,14 +20,14 @@
 
     <!-- Show normal page only when NOT searching -->
     <div v-else>
-      <section class="hero">
+      <!-- <section class="hero">
         <div class="hero-text">
           <h1>Make you look</h1>
           <h1 class="bold">Beautiful and</h1>
           <h1 class="bold">Dignified.</h1>
         </div>
         <img src="/image/image 1.png" class="image-1-img" />
-      </section>
+      </section> -->
 
       <div>
         <CategoryTabs
