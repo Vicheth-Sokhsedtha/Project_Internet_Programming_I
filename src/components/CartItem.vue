@@ -3,20 +3,32 @@
     <img :src="item.image" alt="Dress" class="thumb" />
     <div class="info">
       <p class="name">{{ item.name }}</p>
-      <p>Size: {{ item.size }}</p>
+
+      <!-- ✅ Size selector -->
+      <label for="size">Size:</label>
+      <select
+        v-model="item.size"
+        @change="$emit('update:size', item.id, item.size)"
+        class="size-select"
+      >
+        <option value="XS">XS</option>
+        <option value="S">S</option>
+        <option value="M">M</option>
+        <option value="L">L</option>
+        <option value="XL">XL</option>
+      </select>
 
       <p class="price">${{ item.price.toFixed(2) }} each</p>
     </div>
+
     <div class="controls">
       <div class="qty">
-        <p>Quality: {{ item.quality  }}</p>
+        <p>Quality: {{ item.quality }}</p>
         <div class="qty-box">
           <button class="qty-btn" @click="decreaseQty">-</button>
           <span class="qty-value">{{ item.qty }}</span>
           <button class="qty-btn" @click="increaseQty">+</button>
         </div>
-
-
       </div>
       <p class="total">${{ (item.price * item.qty).toFixed(2) }}</p>
       <button class="btn-cancel" @click="$emit('remove', item.id)">Remove</button>
@@ -36,7 +48,7 @@ export default defineComponent({
       required: true
     }
   },
-  emits: ['update:qty', 'remove'],
+  emits: ['update:qty', 'update:size', 'remove'],
   methods: {
     increaseQty() {
       this.$emit('update:qty', this.item.id, this.item.qty + 1);
@@ -85,6 +97,13 @@ export default defineComponent({
   margin: 4px 0;
 }
 
+.size-select {
+  margin: 6px 0;
+  padding: 5px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
 .controls {
   display: flex;
   gap: 16px;
@@ -98,7 +117,7 @@ export default defineComponent({
   gap: 10px;
 }
 
-.qty-box{
+.qty-box {
   display: flex;
   align-items: center;
   gap: 8px;

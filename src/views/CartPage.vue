@@ -11,12 +11,13 @@
         :key="item.id"
         :item="item"
         @update:qty="cartStore.updateQty"
+        @update:size="cartStore.updateSize"
         @remove="cartStore.removeItem"
       />
       <div class="cart-summary">
         <p><strong>Subtotal:</strong> ${{ cartStore.subtotal.toFixed(2) }}</p>
         <div class="cart-actions">
-          <button @click="goToProductPage"  class="btn-update">Update Products</button>
+          <button @click="goToProductPage" class="btn-update">Update Products</button>
           <button @click="goToCheckout" class="btn-checkout">Proceed to Checkout</button>
         </div>
       </div>
@@ -45,6 +46,7 @@ export default defineComponent({
       router.push({ name: 'checkout' });
     };
 
+
     return {
       cartStore,
       goToProductPage,
@@ -52,6 +54,8 @@ export default defineComponent({
     };
   }
 });
+
+
 </script>
 
 <style scoped>
@@ -61,7 +65,7 @@ export default defineComponent({
   padding: 2rem;
   background-color: #D9CFC7;
 }
-h1{
+h1 {
   text-align: center;
 }
 
@@ -80,7 +84,6 @@ h1{
   cursor: pointer;
   font-weight: bold;
   margin-top: 1rem;
-
 }
 
 .cart-summary {
@@ -88,7 +91,6 @@ h1{
   padding: 1.5rem;
   border-top: 2px solid #eee;
   text-align: right;
-
 }
 
 .cart-summary p {

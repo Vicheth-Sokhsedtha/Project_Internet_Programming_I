@@ -18,7 +18,7 @@
     </section>
 
     <!-- Explore Collections Title -->
-    <div class="collections-section">
+    <div class="discount-bar">
       <h2 class="section-title">Explore Collections</h2>
     </div>
 
@@ -69,7 +69,7 @@
     </div>
 
     <!-- About Us Section -->
-     <div class="discount-bar">
+     <div id="about" class="discount-bar">
         <h2 class="section-title">About Us</h2>
       </div>
     <section class="about-section">
@@ -92,7 +92,7 @@
     </section>
 
     <!-- Contact Section -->
-      <div class="discount-bar">
+    <div id="contact" class="discount-bar">
       <h2 class="section-title">Contact us</h2>
     </div>
     <section class="contact-section">
@@ -169,6 +169,8 @@ interface Product {
   oldPrice?: number;
   image: string;
 }
+
+
 
 // Product data arrays
 const discountProducts: Product[] = [
@@ -294,6 +296,8 @@ function submitForm() {
     alert("Please fill in all fields");
   }
 }
+
+
 </script>
 
 <style scoped>
@@ -518,8 +522,14 @@ function submitForm() {
 /* Discount Bar */
 .discount-bar {
   width: 100%;
+  height: 50px;
   background: white;
-  padding: 50px 0;
+  padding: 50px ;
+  margin-bottom: 40px;
+  box-sizing: border-box;
+  display:flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .discount-title {
@@ -528,7 +538,8 @@ function submitForm() {
   font-weight: 600;
   font-family: "Playfair Display", serif;
   color: #000000;
-  margin: 0;
+
+
 }
 
 /* Search results styles */

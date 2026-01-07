@@ -12,8 +12,8 @@ import SignUpView from '../views/SignUpView.vue';
 const routes = [
   {
     path: '/',
-    name: 'ProductDetail',
-    component: ProductDetail
+    name: 'login',
+    component: LoginView
   },
   {
     path: '/cart',
@@ -60,13 +60,65 @@ const routes = [
     path: '/signup',
     name: 'signup',
     component: SignUpView
-  }
+  },
+
+  {
+  path: '/home',
+  component: HomeView,
+  children: [
+    { path: 'about', component: AboutView },
+    { path: 'contact', component: EndpageView }
+  ]
+}
+
+//   {
+//   path: '/home',
+//   name: 'home',
+//   component: () => import('../views/HomeView.vue'),
+//   children: [
+//     {
+//       path: 'contact',   // no leading slash → child route
+//       name: 'contact',
+//       component: () => import('../views/EndpageView.vue')
+//     },
+//     {
+//       path: 'about',
+//       name: 'about',
+//       component: () => import('../views/AboutView.vue')
+//     }
+//   ]
+// }
+
 
 ];
 
+// const router = createRouter({
+//   history: createWebHistory(),
+//   routes
+// });
+
+// const router = createRouter({
+//   history: createWebHistory(),
+//   routes,
+//   linkActiveClass: 'active',        // applied when route starts with link
+//   linkExactActiveClass: 'exact-active' // applied only on exact match
+// })
+
 const router = createRouter({
   history: createWebHistory(),
-  routes
-});
+  routes,
+  scrollBehavior(to, from, savedPosition) {
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      }
+    }
+    return { top: 0 }
+  }
+})
+
+
+
 
 export default router;

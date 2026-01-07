@@ -34,7 +34,7 @@ const addToCart = () => {
     qty: quantity.value,   // ✅ matches interface
   });
 
-
+   router.push({ name: 'Cart' });
   // Reset quantity after adding to cart
   quantity.value = 1;
 };
@@ -100,7 +100,7 @@ const goToCart = () => {
 
         <!-- Add to Cart -->
         <div class="button-group">
-          <button class="addTocart" @click="addToCart">Add to Cart</button>
+          <button class="addTocart" @click="addToCart" >Add to Cart</button>
           <!-- <button class="view-cart-btn" @click="goToCart">View Cart ({{ cartStore.itemCount }})</button> -->
         </div>
       </div>

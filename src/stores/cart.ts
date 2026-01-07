@@ -15,8 +15,8 @@ export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([]);
 
   const addItem = (item: Omit<CartItem, 'id'>) => {
-    const existingItem = items.value.find(i =>
-      i.name === item.name && i.size === item.size
+    const existingItem = items.value.find(
+      i => i.name === item.name && i.size === item.size
     );
 
     if (existingItem) {
@@ -41,6 +41,14 @@ export const useCartStore = defineStore('cart', () => {
     }
   };
 
+  // ✅ New: update size
+  const updateSize = (id: number, size: string) => {
+    const item = items.value.find(i => i.id === id);
+    if (item) {
+      item.size = size;
+    }
+  };
+
   const removeItem = (id: number) => {
     const index = items.value.findIndex(i => i.id === id);
     if (index !== -1) {
@@ -53,21 +61,20 @@ export const useCartStore = defineStore('cart', () => {
   };
 
   const subtotal = computed(() =>
-    items.value.reduce((sum, item) => sum + (item.price * item.qty), 0)
+    items.value.reduce((sum, item) => sum + item.price * item.qty, 0)
   );
 
   const itemCount = computed(() =>
     items.value.reduce((count, item) => count + item.qty, 0)
   );
 
-  const getProductById = (id: number) => { return items.value.find(p => p.id === id); };
-  // return { items, addItem, clearCart, getProductById };
+  const getProductById = (id: number) =>
+    items.value.find(p => p.id === id);
 
   const findByName = (name: string) =>
-    items.value.filter(i => i.name.toLowerCase().includes(name.toLowerCase())
-  );
-
-
+    items.value.filter(i =>
+      i.name.toLowerCase().includes(name.toLowerCase())
+    );
 
   return {
     items,
@@ -75,13 +82,10 @@ export const useCartStore = defineStore('cart', () => {
     itemCount,
     addItem,
     updateQty,
+    updateSize,   // ✅ expose new action
     removeItem,
     clearCart,
     getProductById,
     findByName
   };
 });
-
-
-
-

@@ -20,7 +20,9 @@
               </div>
               <p class="price">${{ (item.price * item.qty).toFixed(2) }}</p>
             </div>
+            <button class="btn-cancel" @click="cartStore.removeItem(item.id)">X</button>
           </div>
+
         </div>
           <div class="checkout-section">
             <h3>Checkout</h3>
@@ -62,12 +64,32 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue';
+import { defineComponent, computed , PropType } from 'vue';
 import { useRouter } from 'vue-router';
 import { useCartStore } from '../stores/cart';
+import type { CartItem } from '../stores/cart';
 
 export default defineComponent({
   name: 'CheckoutCart',
+
+
+  props: {
+    item: {
+      type: Object as PropType<CartItem>,
+      required: true
+    }
+  },
+  emits: ['update:qty', 'update:size', 'remove'],
+  methods: {
+    increaseQty() {
+      this.$emit('update:qty', this.item.id, this.item.qty + 1);
+    },
+    decreaseQty() {
+      if (this.item.qty > 1) {
+        this.$emit('update:qty', this.item.id, this.item.qty - 1);
+      }
+    }
+  },
   setup() {
     const router = useRouter();
     const cartStore = useCartStore();
@@ -97,6 +119,8 @@ export default defineComponent({
     const goToProductPage = () => {
       router.push({ name: 'product' });
     };
+
+
 
     return {
       cartStore,
@@ -160,6 +184,23 @@ export default defineComponent({
   border-radius: 25px;
   margin: 20px;
 
+}
+
+.btn-cancel {
+  background: #dc3545;
+  color: #fff;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 8px;
+  cursor: pointer;
+  font-weight: 700;
+
+}
+
+.btn-cancel:hover {
+  opacity: 0.9;
 }
 
 .thumb {

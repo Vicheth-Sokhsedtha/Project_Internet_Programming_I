@@ -22,15 +22,22 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/about" class="nav-link" active-class="active">
+            <router-link  to="/home#about" class="nav-link" active-class="active">
               About
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/contact" class="nav-link" active-class="active">
+            <router-link to="/home#contact" class="nav-link" active-class="active">
               Contact
             </router-link>
           </li>
+
+          <!-- <li class="nav-item">
+            <a href="#about" class="nav-link">About</a>
+          </li>
+          <li class="nav-item">
+            <a href="#contact" class="nav-link">Contact</a>
+          </li> -->
         </ul>
       </div>
 
@@ -79,12 +86,12 @@
             </router-link>
           </li>
           <li class="mobile-nav-item">
-            <router-link to="/about" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
+            <router-link to="/home#about" class="mobile-nav-link" @click="closeMobileMenu" active-class="active1">
               About
             </router-link>
           </li>
           <li class="mobile-nav-item">
-            <router-link to="/contact" class="mobile-nav-link" @click="closeMobileMenu" active-class="active">
+            <router-link to="/home#contact" class="mobile-nav-link" @click="closeMobileMenu" active-class="active2">
               Contact
             </router-link>
           </li>
@@ -218,6 +225,16 @@ const handleMobileAuth = () => {
 }
 
 .nav-item .nav-link.active {
+  color: #42b983;
+  border-bottom: 2px solid #42b983;
+}
+
+.nav-item .nav-link.active1 {
+  color: #42b983;
+  border-bottom: 2px solid #42b983;
+}
+
+.nav-item .nav-link.active2 {
   color: #42b983;
   border-bottom: 2px solid #42b983;
 }
