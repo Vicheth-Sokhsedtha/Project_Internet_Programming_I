@@ -8,10 +8,14 @@ import ProductPage from '../views/ProductPage.vue';
 import EndpageView from '../views/EndpageView.vue';
 import LoginView from '../views/LoginView.vue';
 import SignUpView from '../views/SignUpView.vue';
-
+import AdminDashboard from '../views/admin/AdminDashboard.vue';
 const routes = [
   {
     path: '/',
+    redirect: { name: 'login' } // avoid duplicate name on root
+  },
+  {
+    path: '/login',
     name: 'login',
     component: LoginView
   },
@@ -69,6 +73,11 @@ const routes = [
     { path: 'about', component: AboutView },
     { path: 'contact', component: EndpageView }
   ]
+},
+{
+  path: '/adminDashboard',
+  name: 'adminDashboard',
+  component: AdminDashboard
 }
 
 //   {
@@ -118,7 +127,19 @@ const router = createRouter({
   }
 })
 
-
+router.beforeEach((to, from, next) => {
+  const user = JSON.parse(localStorage.getItem('user') || 'null')
+  console.log('[router] to:', to.name, 'user:', user)
+  if (to.meta?.requiresAuth && !user) {
+    console.log('[router] requiresAuth -> redirect to login')
+    return next({ name: 'login' })
+  }
+  if (to.meta?.requiresAdmin && user?.role !== 'admin') {
+    console.log('[router] requiresAdmin but not admin -> redirect home')
+    return next({ name: 'home' })
+  }
+  next()
+})
 
 
 export default router;

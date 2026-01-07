@@ -29,6 +29,9 @@
             <input type="file" @change="handleFileUpload" />
             <button class="pay-btn" @click="pay">Pay</button>
             <p class="note">*Note: I must submit your recipe in the box</p>
+            <div class="QR bg-white p-10px">
+              <img src="/public/image/QR.png" alt="">
+            </div>
           </div>
 
       </div>
@@ -235,7 +238,15 @@ export default defineComponent({
   border-radius: 20px;
   text-align: center;
 }
+.QR{
+  background-color: white;
+  img{
+    width:200px;
+    height:200px;
+    padding:10px;
+  }
 
+}
 .pay-btn {
   background: green;
   color: white;
