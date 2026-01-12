@@ -72,6 +72,7 @@
      <div id="about" class="discount-bar">
         <h2 class="section-title">About Us</h2>
       </div>
+
     <section class="about-section">
 
 
@@ -144,9 +145,12 @@
 
       <!-- Map Section -->
       <div class="map-section">
-        <h3 class="map-title">📍 Our location</h3>
+        <h3 class="map-title">📍
+          <a href="https://maps.app.goo.gl/pu5sbhKriyAf7pW2A?g_st=atm">
+          Our location</a>
+        </h3>
         <div class="map-container">
-          <!-- <img src="/image/map.png" class="map-img" /> -->
+          <img src="/image/location.png" class="map-img" />
         </div>
       </div>
     </section>
@@ -757,87 +761,7 @@ function submitForm() {
   object-fit: cover;
 }
 
-/* Footer */
-.footer {
-  background: #C5B8AD;
-  padding: 60px 40px 24px;
-}
 
-.footer-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 60px;
-  margin-bottom: 40px;
-}
-
-.footer-logo {
-  font-family: "Playfair Display", serif;
-  font-size: 28px;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: #000;
-}
-
-.footer-heading {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 20px;
-  color: #000;
-}
-
-.footer-text {
-  font-size: 14px;
-  color: #333;
-  line-height: 1.7;
-  margin-bottom: 16px;
-}
-
-.footer-links {
-  list-style: none;
-}
-
-.footer-links li {
-  margin-bottom: 12px;
-}
-
-.footer-links a {
-  color: #000;
-  text-decoration: none;
-  font-size: 14px;
-  transition: color 0.2s;
-}
-
-.footer-links a:hover {
-  color: #555;
-}
-
-.social-icons {
-  display: flex;
-  gap: 16px;
-  font-size: 24px;
-}
-
-.social-icons a {
-  transition: transform 0.2s;
-  text-decoration: none;
-}
-
-.social-icons a:hover {
-  transform: scale(1.15);
-}
-
-.footer-bottom {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding-top: 24px;
-  border-top: 1px solid rgba(0, 0, 0, 0.2);
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  color: #333;
-}
 
 /* Responsive */
 @media (max-width: 1024px) {

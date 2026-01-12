@@ -47,6 +47,7 @@
 </template>
 
 <style>
+
   .full-footer {
   background: #d1bfa9;
   padding: 60px 80px;

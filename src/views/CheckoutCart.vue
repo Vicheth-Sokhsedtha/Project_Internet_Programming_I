@@ -40,8 +40,10 @@
           </div>
 
       </div>
-        <h3>Order Summary</h3>
+
+      <div class="items-checkout">
         <div class="summary">
+          <h3>Order Summary</h3>
           <div class="summary-row">
             <span class="label">Subtotal:</span>
             <span class="value">${{ cartStore.subtotal.toFixed(2) }}</span>
@@ -63,7 +65,20 @@
           </div>
         </div>
 
+        <div class="location">
+          <h4>Location</h4>
+          <input type="text" placeholder="123 Main St, City, Country">
+          <p>Upload Picture of your location</p>
+          <input type="file" placeholder="picture of your location">
+          <a href="https://maps.app.goo.gl/pu5sbhKriyAf7pW2A?g_st=atm">Your Current location</a>
 
+          <h4>Contact Number</h4>
+          <input type="text" placeholder="+1234567890">
+          <h4>Email</h4 >
+          <input type="text" placeholder="welcomeourshop@gmail.com">
+        </div>
+
+      </div>
         <div class="checkout-actions">
           <button @click="goToCart" class="btn-back">Back to Cart</button>
         </div>
@@ -177,6 +192,22 @@ export default defineComponent({
   border: none;
   cursor: pointer;
   margin-top: 1rem;
+}
+.location{
+  margin-top: 25px;
+  margin-left: 250px;
+  background-color: #EFE9E3;
+  height: 300px;
+  border-radius: 20px;
+  padding: 10px;
+}
+.location input{
+  display: block;
+  margin: 10px 0;
+  padding: 8px;
+  width: 250px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .cart-item {
