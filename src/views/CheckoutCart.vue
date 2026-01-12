@@ -197,7 +197,7 @@ export default defineComponent({
   margin-top: 25px;
   margin-left: 250px;
   background-color: #EFE9E3;
-  height: 300px;
+  height: 350px;
   border-radius: 20px;
   padding: 10px;
 }
@@ -207,7 +207,16 @@ export default defineComponent({
   padding: 8px;
   width: 250px;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 10px;
+}
+.location a{
+  color: blue;
+  text-decoration: none;
+}
+
+.location p{
+  margin-top: 10px;
+  font-size: smaller;
 }
 
 .cart-item {
