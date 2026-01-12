@@ -26,12 +26,17 @@
         </div>
           <div class="checkout-section">
             <h3>Checkout</h3>
-            <input type="file" @change="handleFileUpload" />
-            <button class="pay-btn" @click="pay">Pay</button>
-            <p class="note">*Note: I must submit your recipe in the box</p>
+            <br/>
+            <br>
             <div class="QR bg-white p-10px">
               <img src="/public/image/QR.png" alt="">
             </div>
+            <br>
+            <br>
+            <input type="file" @change="handleFileUpload" />
+            <button class="pay-btn" @click="pay">Pay</button>
+            <p class="note">*Note: I must submit your recipe in the box</p>
+
           </div>
 
       </div>
