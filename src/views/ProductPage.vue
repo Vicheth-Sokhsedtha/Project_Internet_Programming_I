@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import SearchBar from "../components/SearchBar.vue";
 import CategoryTabs from "../components/CategoryTabs.vue";
 import ProductSection from "../components/ProductSection.vue";
@@ -69,85 +69,59 @@ interface Product {
   price: number;
   oldPrice?: number;
   image: string;
+  category?: string;
+  description?: string;
 }
 
-// Product data arrays
-const discountProducts: Product[] = [
-  { id: 1, name: "Working dress", oldPrice: 30.00, price: 15.00, image: "/image/popupar 37.png" },
-  { id: 2, name: "T-shirt Coffee", oldPrice: 20.00, price: 10.00, image: "/image/popupar 37.png" },
-  { id: 3, name: "Summer dress", oldPrice: 30.00, price: 25.00, image: "/image/popupar 37.png" },
-  { id: 4, name: "Black Jeans", oldPrice: 22.00, price: 20.00, image: "/image/popupar 37.png" },
-  { id: 5, name: "Working Pants", oldPrice: 20.00, price: 15.00, image: "/image/popupar 37.png" },
-  { id: 6, name: "Hoodie", oldPrice: 20.00, price: 15.00, image: "/image/popupar 37.png" },
-  { id: 7, name: "Brown Coat", oldPrice: 40.00, price: 25.00, image: "/image/popupar 37.png" },
-  { id: 8, name: "Skirt Flower", oldPrice: 25.00, price: 15.00, image: "/image/popupar 37.png" },
-];
+// Reactive product data from backend
+const backendProducts = ref<Product[]>([]);
+const loading = ref(true);
+const error = ref("");
 
-const dress: Product[] = [
-  { id: 1, name: "Working dress", oldPrice: 30.00, price: 15.00, image: "/image/popupar 23.png" },
-  { id: 2, name: "Cheries T-Shirt", oldPrice: 20.00, price: 14.00, image: "/image/popupar 25.png" },
-  { id: 3, name: "Woman Short", oldPrice: 15.00, price: 10.00, image: "/image/popupar 27.png" },
-  { id: 4, name: "Summer dress", oldPrice: 30.00, price: 25.00, image: "/image/popupar 29.png" },
-  { id: 5, name: "Red Floral Dress", oldPrice: 35.00, price: 20.00, image: "/image/popupar 31.png" },
-  { id: 6, name: "Beige Dress", oldPrice: 20.00, price: 15.00, image: "/image/popupar 33.png" },
-  { id: 7, name: "Brown Coat", oldPrice: 40.00, price: 25.00, image: "/image/popupar 64.png" },
-  { id: 8, name: "Working Pants", oldPrice: 20.00, price: 15.00, image: "/image/popupar 35.png" },
-];
+// Fetch products from backend
+const fetchProducts = async () => {
+  try {
+    loading.value = true;
+    const response = await fetch("http://localhost:5000/api/products/");
+    const data = await response.json();
+    backendProducts.value = data;
+    console.log("Products loaded:", data);
+  } catch (err) {
+    error.value = "Failed to load products from server";
+    console.error(err);
+  } finally {
+    loading.value = false;
+  }
+};
 
-const tshirts: Product[] = [
-  { id: 1, name: "Working dress", oldPrice: 30.00, price: 15.00, image: "/image/popupar 95.png" },
-  { id: 2, name: "Cherries T-Shirt", oldPrice: 20.00, price: 14.00, image: "/image/popupar 39.png" },
-  { id: 3, name: "Woman Short", oldPrice: 18.00, price: 10.00, image: "/image/tShirt6 1.png" },
-  { id: 4, name: "Summer dress", oldPrice: 30.00, price: 25.00, image: "/image/tShirt11 3.png" },
-  { id: 5, name: "Black Jeans", oldPrice: 25.00, price: 20.00, image: "/image/popupar 45.png" },
-  { id: 6, name: "Working Pants", oldPrice: 25.00, price: 15.00, image: "/image/tShirt11 2.png" },
-  { id: 7, name: "Black Jeans", oldPrice: 22.00, price: 20.00, image: "/image/popupar 65.png" },
-  { id: 8, name: "Hoodie", oldPrice: 20.00, price: 15.00, image: "/image/popupar 66.png" },
-];
+// Organize products by category
+const discountProducts = computed(() => {
+  return backendProducts.value.filter(p => p.oldPrice && p.price < p.oldPrice).slice(0, 8);
+});
 
-const jacket: Product[] = [
-  { id: 1, name: "Working dress", oldPrice: 30.00, price: 30.00, image: "/image/popupar 51.png" },
-  { id: 2, name: "Cherries T-Shirt", oldPrice: 20.00, price: 14.00, image: "/image/popupar 53.png" },
-  { id: 3, name: "Woman Short", oldPrice: 18.00, price: 10.00, image: "/image/popupar 55.png" },
-  { id: 4, name: "Summer dress", oldPrice: 30.00, price: 25.00, image: "/image/popupar 57.png" },
-  { id: 5, name: "Black Jeans", oldPrice: 22.00, price: 20.00, image: "/image/popupar 59.png" },
-  { id: 6, name: "Hoodie", oldPrice: 20.00, price: 15.00, image: "/image/popupar 61.png" },
-  { id: 7, name: "Brown Coat", oldPrice: 30.00, price: 25.00, image: "/image/popupar 63.png" },
-  { id: 8, name: "Working Pants", oldPrice: 20.00, price: 15.00, image: "/image/hoodie7 1.png" },
-];
+const dress = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Dresses').slice(0, 8);
+});
 
-const cropTop: Product[] = [
-  { id: 1, name: "Working dress", oldPrice: 30.00, price: 30.00, image: "/image/popupar 67.png" },
-  { id: 2, name: "Cherries T-Shirt", oldPrice: 20.00, price: 14.00, image: "/image/popupar 68.png" },
-  { id: 3, name: "Woman Short", oldPrice: 18.00, price: 10.00, image: "/image/popupar 69.png" },
-  { id: 4, name: "Summer dress", oldPrice: 30.00, price: 25.00, image: "/image/popupar 70.png" },
-  { id: 5, name: "Black Jeans", oldPrice: 22.00, price: 20.00, image: "/image/popupar 71.png" },
-  { id: 6, name: "Hoodie", oldPrice: 20.00, price: 15.00, image: "/image/popupar 72.png" },
-  { id: 7, name: "Brown Coat", oldPrice: 30.00, price: 25.00, image: "/image/hoodie7 2.png" },
-  { id: 8, name: "Working Pants", oldPrice: 20.00, price: 15.00, image: "/image/popupar 73.png" },
-];
+const tshirts = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Shirts').slice(0, 8);
+});
 
-const shorts: Product[] = [
-  { id: 1, name: "Working dress", oldPrice: 30.00, price: 30.00, image: "/image/popupar 81.png" },
-  { id: 2, name: "Cherries T-Shirt", oldPrice: 20.00, price: 14.00, image: "/image/popupar 82.png" },
-  { id: 3, name: "Woman Short", oldPrice: 18.00, price: 10.00, image: "/image/popupar 83.png" },
-  { id: 4, name: "Summer dress", oldPrice: 30.00, price: 25.00, image: "/image/popupar 84.png" },
-  { id: 5, name: "Black Jeans", oldPrice: 22.00, price: 20.00, image: "/image/popupar 85.png" },
-  { id: 6, name: "Hoodie", oldPrice: 20.00, price: 15.00, image: "/image/popupar 86.png" },
-  { id: 7, name: "Brown Coat", oldPrice: 30.00, price: 25.00, image: "/image/popupar 87.png" },
-  { id: 8, name: "Working Pants", oldPrice: 20.00, price: 15.00, image: "/image/hoodie7 4.png" },
-];
+const jacket = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Jackets').slice(0, 8);
+});
 
-const skirts: Product[] = [
-  { id: 1, name: "Working dress", oldPrice: 30.00, price: 30.00, image: "/image/popupar 88.png" },
-  { id: 2, name: "Cherries T-Shirt", oldPrice: 20.00, price: 14.00, image: "/image/popupar 89.png" },
-  { id: 3, name: "Woman Short", oldPrice: 18.00, price: 10.00, image: "/image/popupar 90.png" },
-  { id: 4, name: "Summer dress", oldPrice: 30.00, price: 25.00, image: "/image/popupar 91.png" },
-  { id: 5, name: "Black Jeans", oldPrice: 22.00, price: 20.00, image: "/image/popupar 92.png" },
-  { id: 6, name: "Hoodie", oldPrice: 20.00, price: 15.00, image: "/image/popupar 93.png" },
-  { id: 7, name: "Brown Coat", oldPrice: 30.00, price: 25.00, image: "/image/popupar 94.png" },
-  { id: 8, name: "Working Pants", oldPrice: 20.00, price: 15.00, image: "/image/popupar 95.png" },
-];
+const cropTop = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'CropTop').slice(0, 8);
+});
+
+const shorts = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Shorts').slice(0, 8);
+});
+
+const skirts = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Skirts').slice(0, 8);
+});
 
 // --- Search state ---
 const searchQuery = ref("");
@@ -159,35 +133,32 @@ function handleSearch(query: string) {
 
 // Handle category tab selection
 function handleCategorySelect(category: string) {
-  // When selecting a category, show those products as "search results"
   searchQuery.value = category;
 }
 
-// Combine ALL products from ALL categories for searching
+// Combine ALL products for searching
 const allProducts = computed(() => {
-  return [
-    ...discountProducts,
-    ...dress,
-    ...tshirts,
-    ...jacket,
-    ...cropTop,
-    ...shorts,
-    ...skirts
-  ];
+  return backendProducts.value;
 });
 
-// Filter products from ALL categories based on search query
+// Filter products based on search query
 const filteredProducts = computed(() => {
   if (!searchQuery.value) return [];
 
   const query = searchQuery.value.toLowerCase();
 
-  // Search in ALL products from ALL categories
   return allProducts.value.filter(product =>
-    product.name.toLowerCase().includes(query)
+    product.name.toLowerCase().includes(query) ||
+    (product.category && product.category.toLowerCase().includes(query))
   );
 });
+
+// Load products on component mount
+onMounted(() => {
+  fetchProducts();
+});
 </script>
+
 
 <style scoped>
 .page {

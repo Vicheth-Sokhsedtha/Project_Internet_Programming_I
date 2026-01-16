@@ -1,134 +1,132 @@
 <template>
-  <div>
-    <div class="tabs">
-
-      <button
-        v-for="tab in tabs1"
-        :key="tab"
-        class="tab-btn"
-        :class="{ active: activeTab === tab }"
-        @click="activeTab = tab"
-      >
-        {{ tab }}
-      </button>
-    </div>
-    <!-- Hero Banner -->
-    <section class="hero">
-      <img src="/image/promotion1 1.png" class="hero-image" />
-      <div class="hero-content">
-        <h4 class="hero-title">
-          Winter Collection<br />
-          <span class="hero-subtitle">30% OFF</span>
-        </h4>
-        <router-link to="/product">
-          <button class="hero-button">Shop Now</button>
-        </router-link>
-      </div>
-    </section>
-
-    <!-- Category Grid -->
-    <div class="category-grid">
-      <div
-        v-for="tab in tabs"
-        :key="tab.name"
-        class="category-card"
-        :class="{ active: activeTab === tab.name }"
-        @click="activeTab = tab.name"
-      >
-        <img :src="tab.image" :alt="tab.name" class="category-img" />
-        <p class="category-label">{{ tab.name }}</p>
-      </div>
-    </div>
-
-    <!-- Product Section -->
-    <!-- <ProductSection
-      v-if="activeTab"
-      :title="activeTab"
-      :items="getItems(activeTab)"
-    /> -->
+  <div class="tabs">
+    <button
+      v-for="tab in tabs"
+      :key="tab.name"
+      class="tab-btn"
+      :class="{ active: activeTab === tab.name }"
+      @click="handleCategorySelect(tab.name)"
+    >
+      {{ tab.name }}
+    </button>
   </div>
+
+  <!-- Hero Banner -->
+  <section class="hero-banner">
+    <img src="/image/promotion1 1.png" alt="Winter Collection" class="hero-image" />
+    <div class="hero-content">
+      <h2 class="hero-title">Winter Collection</h2>
+      <p class="hero-subtitle">Up to 30% OFF</p>
+      <router-link to="/product">
+        <button class="hero-button">Shop Now</button>
+      </router-link>
+    </div>
+  </section>
+
+  <!-- Category Grid -->
+  <div class="category-grid">
+    <!-- Discount Category -->
+    <div
+      class="category-card"
+      :class="{ active: activeTab === 'Discount' }"
+      @click="handleCategorySelect('Discount')"
+    >
+      <img src="/image/discount 1.png" alt="Discount" class="category-img" />
+      <h3>Discount</h3>
+    </div>
+
+    <!-- Other Categories -->
+    <div
+      v-for="tab in tabs"
+      :key="tab.name"
+      class="category-card"
+      :class="{ active: activeTab === tab.name }"
+      @click="handleCategorySelect(tab.name)"
+    >
+      <img :src="tab.image" :alt="tab.name" class="category-img" />
+      <h3>{{ tab.name }}</h3>
+    </div>
+  </div>
+
+  <!-- Product Sections -->
+  <ProductSection
+    v-if="activeTab === 'Discount'"
+    title="Discount"
+    :items="discountProducts"
+  />
+  <ProductSection
+    v-else-if="activeTab"
+    :title="activeTab"
+    :items="filteredProducts"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import ProductSection from "./ProductSection.vue";
-import CategoryTabs from "./CategoryTabs.vue";
-
-// interface Props {
-//   discountProducts: any[];
-//   dress: any[];
-//   tshirts: any[];
-//   jacket: any[];
-//   cropTop: any[];
-//   shorts: any[];
-//   skirts: any[];
-// }
-
-// const props = defineProps<Props>();
-
-
-// const activeTab = ref("All");
 
 interface Product {
   id: number;
   name: string;
+  price: number;
+  oldPrice?: number;
   image: string;
+  category?: string;
 }
 
-interface Props {
-  discountProducts: Product[];
-  dress: Product[];
-  tshirts: Product[];
-  jacket: Product[];
-  cropTop: Product[];
-  pants?: Product[];
-  shorts: Product[];
-  skirts: Product[];
+const backendProducts = ref<Product[]>([]);
+const activeTab = ref("");
+
+const fetchProducts = async () => {
+  const response = await fetch("http://localhost:5000/api/products/");
+  backendProducts.value = await response.json();
+};
+
+const categoryImages: Record<string, string> = {
+  Dresses: "/image/dress.png",
+  Shirts: "/image/tshirt.png",
+  Jackets: "/image/jacket.png",
+  CropTop: "/image/croptop.png",
+  Shorts: "/image/shorts.png",
+  Skirts: "/image/skirts.png",
+};
+
+const tabs = computed(() => {
+  const categories = [...new Set(
+    backendProducts.value
+      .map(p => p.category)
+      .filter((c): c is string => !!c)
+  )];
+  return categories.map(c => ({
+    name: c,
+    image: categoryImages[c] || "/image/default.png"
+  }));
+});
+
+function handleCategorySelect(category: string) {
+  activeTab.value = category;
 }
 
-const props = defineProps<Props>();
-const tabs1 = ["All", "Dress", "T-shirts", "Shirts", "Jacket", "Shorts", "Skirts", "Crop Top"];
-// Tabs with images (replace with your actual image paths)
-const tabs = [
-  { name: "Discount", image: "/image/discount 1.png" },
-  { name: "Dress", image: "/image/popupar 22.png" },
-  { name: "T-Shirt & Shirt", image: "/image/popupar 23.png" },
-  { name: "Jacket & Hoodie", image: "/image/popupar 25.png" },
-  { name: "Crop Top", image: "/image/popupar 33.png" },
-  { name: "Jeans & Pants", image: "/image/popupar 27.png" },
-  { name: "Shorts", image: "/image/popupar 29.png" },
-  { name: "Skirt", image: "/image/popupar 31.png" },
-];
+const discountProducts = computed(() =>
+  backendProducts.value.filter(p => p.oldPrice && p.price < p.oldPrice)
+);
 
-const activeTab = ref("Discount");
+const filteredProducts = computed(() =>
+  backendProducts.value.filter(p => p.category === activeTab.value)
+);
 
-// Map tab name → product list
-function getItems(tab: string) {
-  switch (tab) {
-    case "Discount": return props.discountProducts;
-    case "Dress": return props.dress;
-    case "T-Shirt & Shirt": return props.tshirts;
-    case "Jacket & Hoodie": return props.jacket;
-    case "Crop Top": return props.cropTop;
-    case "Jeans & Pants": return props.pants || [];
-    case "Shorts": return props.shorts;
-    case "Skirt": return props.skirts;
-    default: return [];
-  }
-}
-
-
+onMounted(fetchProducts);
 </script>
 
 <style scoped>
 /* Hero Section */
-/* .hero {
+.hero-banner {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2rem;
   padding: 2rem;
-} */
+}
 .hero-image {
   width: 420px;
   height: auto;
@@ -160,8 +158,7 @@ function getItems(tab: string) {
 /* Category Grid */
 .category-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(260px,600px));
-  /* height: 300px; */
+  grid-template-columns: repeat(4, minmax(260px, 600px));
   gap: 24px;
   padding: 0 60px;
   margin-bottom: 40px;
@@ -190,61 +187,8 @@ function getItems(tab: string) {
   font-size: 14px;
   font-weight: 600;
 }
-.hero {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2rem;
-  padding: 2rem;
-}
 
-.hero .hero-text h1 {
-  font-family: "Playfair Display", serif;
-  font-size: 64px;
-  font-weight: 600;
-  line-height: 1.05;
-  margin: 0;
-}
-
-.hero .hero-text h1:first-child {
-  color: #ffffff;
-}
-
-.hero .hero-text .bold {
-  color: #000000;
-}
-
-/* .image-1-img {
-  width: 720px;
-  height: auto;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.1));
-} */
-
-.hero-title {
-  font-size: 3rem; /* equivalent to text-5xl */
-  font-family: serif;
-  font-weight: bold;
-  margin-bottom: 1rem;
-}
-
-.hero-subtitle {
-  font-size: 2rem; /* equivalent to text-4xl */
-}
-
-.hero-button {
-  background-color: #2d3748; /* gray-800 */
-  color: #fff;
-  padding: 0.75rem 2rem;
-  border-radius: 0.5rem;
-  margin-top: 1rem;
-  transition: background-color 0.3s ease;
-  cursor: pointer;
-}
-
-.hero-button:hover {
-  background-color: #4a5568; /* gray-700 */
-}
+/* Tabs */
 .tabs {
   display: flex;
   justify-content: center;

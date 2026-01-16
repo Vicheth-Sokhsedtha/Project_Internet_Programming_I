@@ -29,18 +29,34 @@
 
       <div class="card">
         <div class="card-header">
-          <h2>{{ activeTabLabel }}</h2>
-          <button class="add-btn" @click="openAddModal">+ Add New</button>
+        <h2>{{ activeTabLabel }}</h2>
+        <button
+          v-if="currentTab !== 'users'"
+          class="add-btn"
+          @click="openAddModal"
+        >
+          + Add New
+        </button>
         </div>
+
 
         <table>
           <thead>
             <tr v-if="currentTab === 'orders'">
-              <th>ID</th><th>Date</th><th>Total</th><th>Status</th><th>Action</th>
+                <th>ID</th>
+                <th>customer</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Location</th>
+                <th>Payment File</th>
+                <th>Action</th>
+
             </tr>
-            <tr v-else-if="currentTab === 'customers'">
-              <th>Name</th><th>Email</th><th>Location</th><th>Join Date</th><th>Action</th>
+            <tr v-else-if="currentTab === 'users'">
+              <th>Username</th><th>Email</th><th>Role</th><th>Created At</th><th>Action</th>
             </tr>
+
             <tr v-else-if="currentTab === 'products'">
               <th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Action</th>
             </tr>
@@ -52,18 +68,36 @@
           <tbody>
             <tr v-for="(item, index) in filteredData" :key="index">
               <template v-if="currentTab === 'orders'">
-                <td>{{ item.id }}</td>
-                <td>{{ item.date }}</td>
-                <td>${{ item.total }}</td>
-                <td><span :class="['status', item.status.toLowerCase()]">{{ item.status }}</span></td>
+                 <!-- <tr v-for="(item, index) in filteredData" :key="index" v-if="currentTab === 'orders'"> -->
+                  <td><span class="order-id">{{ item.orderNumber }}</span></td>
+                   <td>{{ item.User?.username }}</td>
+
+                  <td>{{ formatDate(item.createdAt) }}</td>
+                  <td>${{ item.total }}</td>
+                  <td><span :class="['status', item.status.toLowerCase()]">{{ item.status }}</span></td>
+                  <td>{{ item.deliveryAddress }}</td>
+                  <td>
+                    <a v-if="item.paymentProof" :href="item.paymentProof" target="_blank">View Receipt</a>
+                    <span v-else>No file</span>
+                  </td>
+                  <!-- <td>
+                    <button class="edit" @click="editItem(item)">Edit</button>
+                    <button class="delete" @click="deleteItem(item)">Delete</button>
+                  </td> -->
+
               </template>
 
-              <template v-else-if="currentTab === 'customers'">
-                <td>{{ item.name }}</td>
-                <td>{{ item.email }}</td>
-                <td>{{ item.location }}</td>
-                <td>{{ item.joined }}</td>
-              </template>
+
+
+            <template v-else-if="currentTab === 'users'">
+              <td>{{ item.username }}</td>
+              <td>{{ item.email }}</td>
+              <td>{{ item.role }}</td>
+              <td>{{ new Date(item.createdAt).toLocaleDateString() }}</td>
+
+            </template>
+
+
 
               <template v-else-if="currentTab === 'products'">
                 <td>{{ item.name }}</td>
@@ -123,130 +157,161 @@
 </template>
 
 <script setup lang="ts">
-import { emit } from 'cluster'
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'  // ✅ Import Vue Router
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import axios from "axios";
+// import axios from "axios";
 
-const router = useRouter()  // ✅ Router instance
+
+const router = useRouter();
 
 /* NAVIGATION */
-const currentTab = ref('orders')
+const currentTab = ref("users");
 const tabs = [
-  { id: 'orders', name: 'Order List' },
-  { id: 'customers', name: 'Customer Info' },
-  { id: 'products', name: 'Products List' },
-  { id: 'promotions', name: 'Manage Promotion' }
-]
-const activeTabLabel = computed(() => tabs.find(t => t.id === currentTab.value)?.name)
+  { id: "orders", name: "Order List" },
+  { id: "users", name: "User Info" },   // ✅ renamed to users
+  { id: "products", name: "Products List" },
+  { id: "promotions", name: "Manage Promotion" },
+];
+const activeTabLabel = computed(() => tabs.find(t => t.id === currentTab.value)?.name);
 
 /* FIELDS DEFINITION */
 const fields: Record<string, Array<{ key: string; label: string; type: string; options?: string[] }>> = {
   orders: [
-    { key: 'id', label: 'Order ID', type: 'text' },
-    { key: 'date', label: 'Order Date', type: 'date' },
-    { key: 'total', label: 'Total Amount', type: 'number' },
-    { key: 'status', label: 'Status', type: 'select', options: ['Pending', 'Completed'] }
+    { key: "id", label: "Order ID", type: "text" },
+    { key: "date", label: "Order Date", type: "date" },
+    { key: "total", label: "Total Amount", type: "number" },
+    { key: "status", label: "Status", type: "select", options: ["Pending", "Completed"] },
   ],
-  customers: [
-    { key: 'name', label: 'Full Name', type: 'text' },
-    { key: 'email', label: 'Email', type: 'email' },
-    { key: 'location', label: 'Location', type: 'text' },
-    { key: 'joined', label: 'Join Date', type: 'date' }
+  users: [
+  { key: "username", label: "Username", type: "text" },
+  { key: "email", label: "Email", type: "email" },
+  { key: "role", label: "Role", type: "select", options: ["user", "admin"] },
+  { key: "createdAt", label: "Created At", type: "date" },
   ],
-  products: [
-    { key: 'name', label: 'Product Name', type: 'text' },
-    { key: 'category', label: 'Category', type: 'text' },
-    { key: 'price', label: 'Price', type: 'number' },
-    { key: 'stock', label: 'Stock', type: 'number' }
-  ],
-  promotions: [
-    { key: 'code', label: 'Promo Code', type: 'text' },
-    { key: 'discount', label: 'Discount (%)', type: 'number' },
-    { key: 'expiry', label: 'Expiry Date', type: 'date' },
-    { key: 'active', label: 'Status', type: 'checkbox' }
-  ]
-}
 
-/* SAMPLE DATA */
-const db = ref({
-  orders: [
-    { id: 'ORD001', date: '2025-11-10', total: 120, status: 'Completed' },
-    { id: 'ORD002', date: '2025-11-12', total: 80, status: 'Pending' }
-  ],
-  customers: [
-    { name: 'John Doe', email: 'john@example.com', location: 'New York', joined: '2024-01-15' },
-    { name: 'Sarah Smith', email: 'sarah@test.com', location: 'London', joined: '2024-03-20' }
-  ],
   products: [
-    { name: 'Wireless Headphones', category: 'Electronics', price: 99, stock: 45 },
-    { name: 'Coffee Mug', category: 'Home', price: 15, stock: 120 }
+    { key: "name", label: "Product Name", type: "text" },
+    { key: "category", label: "Category", type: "text" },
+    { key: "price", label: "Price", type: "number" },
+    { key: "stock", label: "Stock", type: "number" },
   ],
   promotions: [
-    { code: 'SUMMER25', discount: 20, expiry: '2025-08-31', active: true },
-    { code: 'WELCOME', discount: 10, expiry: '2025-12-31', active: true }
-  ]
-})
+    { key: "code", label: "Promo Code", type: "text" },
+    { key: "discount", label: "Discount (%)", type: "number" },
+    { key: "expiry", label: "Expiry Date", type: "date" },
+    { key: "active", label: "Status", type: "checkbox" },
+  ],
+};
 
 /* STATE */
-const search = ref('')
-const showModal = ref(false)
-const editing = ref(false)
-const form = ref<any>({})
-let originalItem: any = null
+const db = ref<any>({ orders: [], users: [], products: []});
+const search = ref("");
+const showModal = ref(false);
+const editing = ref(false);
+const form = ref<any>({});
+let originalItem: any = null;
 
 /* FILTER */
 const filteredData = computed(() => {
-  const currentData = (db.value as any)[currentTab.value]
+  const currentData = db.value[currentTab.value] || [];
   return currentData.filter((item: any) =>
-    Object.values(item).join('').toLowerCase().includes(search.value.toLowerCase())
-  )
-})
+    Object.values(item).join("").toLowerCase().includes(search.value.toLowerCase())
+  );
+});
+
+
 
 /* CRUD */
 function openAddModal() {
-  editing.value = false
-  const currentFields = fields[currentTab.value]
-  form.value = currentFields.reduce((acc, f) => {
-    acc[f.key] = f.type === 'checkbox' ? false : ''
-    return acc
-  }, {} as any)
-  showModal.value = true
+  editing.value = false;
+  form.value = {};
+  showModal.value = true;
 }
 
 function editItem(item: any) {
-  editing.value = true
-  originalItem = item
-  form.value = { ...item }
-  showModal.value = true
+  editing.value = true;
+  originalItem = item;
+  form.value = { ...item };
+  showModal.value = true;
 }
 
-function saveItem() {
-  const currentList = (db.value as any)[currentTab.value]
-  if (editing.value) {
-    const index = currentList.indexOf(originalItem)
-    if (index !== -1) currentList[index] = { ...form.value }
-  } else {
-    currentList.push({ ...form.value })
+async function saveItem() {
+  try {
+    const tab = currentTab.value;
+    if (editing.value) {
+      await axios.put(`http://localhost:5000/api/admin/${tab}/${form.value.id}`, form.value);
+    } else {
+      await axios.post(`http://localhost:5000/api/admin/${tab}`, form.value);
+    }
+    await loadData();
+    closeModal();
+  } catch (error) {
+    console.error("Error saving item:", error);
+    alert("Failed to save. Check console for details.");
   }
-  closeModal()
 }
 
-function deleteItem(item: any) {
-  (db.value as any)[currentTab.value] = (db.value as any)[currentTab.value].filter((i: any) => i !== item)
+async function deleteItem(item: any) {
+  try {
+    const tab = currentTab.value;
+    if (!item.id) {
+      alert("Item ID is missing");
+      return;
+    }
+    await axios.delete(`http://localhost:5000/api/admin/${tab}/${item.id}`);
+    await loadData();
+  } catch (error) {
+    console.error("Error deleting item:", error);
+    alert("Failed to delete. Check console for details.");
+  }
 }
+
+async function loadData() {
+  try {
+    for (const tab of tabs) {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/admin/${tab.id}`);
+        console.log(`Loaded ${tab.id}:`, res.data);
+        db.value[tab.id] = res.data || [];
+      } catch (error) {
+        console.warn(`Failed to load ${tab.id}:`, error);
+        db.value[tab.id] = [];
+      }
+    }
+  } catch (error) {
+    console.error("Error loading data:", error);
+  }
+}
+
 
 function closeModal() {
-  showModal.value = false
+  showModal.value = false;
+}
+
+function formatDate(dateString: string) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
 }
 
 function handleLogout() {
-  // Optional: clear stored user data
-  localStorage.removeItem('user')
-
-  // Redirect to login page
-  router.push('/login')
+  localStorage.removeItem("user");
+  router.push("/login");
 }
+
+
+
+
+
+onMounted(loadData);
 </script>
+
+
 
 <style scoped>
 .dashboard {
@@ -349,6 +414,15 @@ th, td {
   text-align: left; /* optional: aligns text same in both */
   border-bottom: 1px solid #eee;
   margin: 0;
+}
+
+.order-id {
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #333;
+  font-size: 14px;
 }
 
 /* STATUS */

@@ -67,15 +67,28 @@
 
         <div class="location">
           <h4>Location</h4>
-          <input type="text" placeholder="123 Main St, City, Country">
+          <input
+            v-model="storedLocation"
+            type="text"
+            placeholder="123 Main St, City, Country">
           <p>Upload Picture of your location</p>
-          <input type="file" placeholder="picture of your location">
+          <input
+            @change="handleLocationImageUpload"
+            type="file"
+            placeholder="picture of your location"
+            accept="image/*">
           <a href="https://maps.app.goo.gl/pu5sbhKriyAf7pW2A?g_st=atm">Your Current location</a>
 
           <h4>Contact Number</h4>
-          <input type="text" placeholder="+1234567890">
+          <input
+            v-model="contactNumber"
+            type="text"
+            placeholder="+1234567890">
           <h4>Email</h4 >
-          <input type="text" placeholder="welcomeourshop@gmail.com">
+          <input
+            v-model="email"
+            type="text"
+            placeholder="welcomeourshop@gmail.com">
         </div>
 
       </div>
@@ -87,31 +100,30 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed , PropType } from 'vue';
-import { useRouter } from 'vue-router';
-import { useCartStore } from '../stores/cart';
-import type { CartItem } from '../stores/cart';
+import { defineComponent, computed, PropType, ref } from "vue";
+import { useRouter } from "vue-router";
+import { useCartStore } from "../stores/cart";
+import type { CartItem } from "../stores/cart";
 
 export default defineComponent({
-  name: 'CheckoutCart',
-
+  name: "CheckoutCart",
 
   props: {
     item: {
       type: Object as PropType<CartItem>,
-      required: true
-    }
+      required: true,
+    },
   },
-  emits: ['update:qty', 'update:size', 'remove'],
+  emits: ["update:qty", "update:size", "remove"],
   methods: {
     increaseQty() {
-      this.$emit('update:qty', this.item.id, this.item.qty + 1);
+      this.$emit("update:qty", this.item.id, this.item.qty + 1);
     },
     decreaseQty() {
       if (this.item.qty > 1) {
-        this.$emit('update:qty', this.item.id, this.item.qty - 1);
+        this.$emit("update:qty", this.item.id, this.item.qty - 1);
       }
-    }
+    },
   },
   setup() {
     const router = useRouter();
@@ -119,31 +131,111 @@ export default defineComponent({
 
     const discount = computed(() => 0);
     const delivery = computed(() => 5.0);
-    const total = computed(() => cartStore.subtotal - discount.value + delivery.value);
+    const total = computed(
+      () => cartStore.subtotal - discount.value + delivery.value
+    );
+
+    // File inputs
+    const uploadedFile = ref<File | null>(null);
+    const locationImageFile = ref<File | null>(null);
+
+    // Form fields
+    const storedLocation = ref("");
+    const contactNumber = ref("");
+    const email = ref("");
 
     const handleFileUpload = (event: Event) => {
       const file = (event.target as HTMLInputElement).files?.[0];
       if (file) {
-        alert(`File "${file.name}" uploaded.`);
+        uploadedFile.value = file;
+        alert(`Receipt file "${file.name}" selected.`);
       }
     };
 
-    const pay = () => {
-      alert(`Payment submitted. Total: $${total.value.toFixed(2)}`);
-      // Clear cart after payment
-      cartStore.clearCart();
-      router.push({ name: 'ProductDetail' });
+    const handleLocationImageUpload = (event: Event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (file) {
+        locationImageFile.value = file;
+        alert(`Location image "${file.name}" selected.`);
+      }
+    };
+
+    const pay = async () => {
+      if (!uploadedFile.value) {
+        alert("Please upload payment receipt");
+        return;
+      }
+
+      if (!storedLocation.value.trim()) {
+        alert("Please enter location");
+        return;
+      }
+
+      if (cartStore.items.length === 0) {
+        alert("Cart is empty");
+        return;
+      }
+
+      try {
+        const firstItem = cartStore.items[0];
+
+        // ✅ Ensure productId is a valid integer
+        if (!firstItem.id || isNaN(Number(firstItem.id))) {
+          alert("Invalid product ID");
+          return;
+        }
+
+        // Build FormData payload
+        const formData = new FormData();
+        formData.append("receipt", uploadedFile.value);
+        if (locationImageFile.value) {
+          formData.append("locationImage", locationImageFile.value);
+        }
+        formData.append(
+          "orderData",
+          JSON.stringify({
+            orderNumber: `ORD-${Date.now()}`, // ✅ unique order number
+            userId: 1, // replace with logged-in user ID
+            productId: Number(firstItem.id), // ✅ ensure integer
+            quantity: firstItem.qty,
+            total: total.value,
+            paymentMethod: "QR Code",
+            contactNumber: contactNumber.value,
+            email: email.value,
+            deliveryAddress: storedLocation.value,
+          })
+        );
+
+        const response = await fetch(
+          "http://localhost:5000/api/products/orders/create",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+
+        if (response.ok) {
+          const order = await response.json();
+          alert(`Payment submitted. Order Number: ${order.orderNumber}`);
+          cartStore.clearCart();
+          router.push({ name: "home" });
+        } else {
+          const errorText = await response.text();
+          alert(`Error submitting order: ${errorText}`);
+        }
+      } catch (error) {
+        console.error("Payment error:", error);
+        alert("Error processing payment");
+      }
     };
 
     const goToCart = () => {
-      router.push({ name: 'Cart' });
+      router.push({ name: "Cart" });
     };
 
     const goToProductPage = () => {
-      router.push({ name: 'product' });
+      router.push({ name: "product" });
     };
-
-
 
     return {
       cartStore,
@@ -151,13 +243,19 @@ export default defineComponent({
       delivery,
       total,
       handleFileUpload,
+      handleLocationImageUpload,
       pay,
       goToCart,
-      goToProductPage
+      goToProductPage,
+      storedLocation,
+      contactNumber,
+      email,
     };
-  }
+  },
 });
 </script>
+
+
 
 <style scoped>
 .checkout-cart {

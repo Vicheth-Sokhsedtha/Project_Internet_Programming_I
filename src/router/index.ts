@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router';
 import ProductDetail from '@/views/ProductDetail.vue';
 import CartPage from '@/views/CartPage.vue';
 import CheckoutCart from '@/views/CheckoutCart.vue';
+import MyOrdersPage from '@/views/MyOrdersPage.vue';
+import AdminOrdersPage from '@/views/AdminOrdersPage.vue';
 import AboutView from '../views/AboutView.vue';
 import HomeView from '../views/HomeView.vue';
 import ProductPage from '../views/ProductPage.vue';
@@ -29,6 +31,16 @@ const routes = [
     path: '/checkout',
     name: 'checkout',
     component: CheckoutCart
+  },
+  {
+    path: '/my-orders',
+    name: 'myOrders',
+    component: MyOrdersPage
+  },
+  {
+    path: '/admin-orders',
+    name: 'adminOrders',
+    component: AdminOrdersPage
   },
   {
     path: '/about',
@@ -87,23 +99,7 @@ const routes = [
 }
 
 
-//   {
-//   path: '/home',
-//   name: 'home',
-//   component: () => import('../views/HomeView.vue'),
-//   children: [
-//     {
-//       path: 'contact',   // no leading slash → child route
-//       name: 'contact',
-//       component: () => import('../views/EndpageView.vue')
-//     },
-//     {
-//       path: 'about',
-//       name: 'about',
-//       component: () => import('../views/AboutView.vue')
-//     }
-//   ]
-// }
+
 
 
 ];

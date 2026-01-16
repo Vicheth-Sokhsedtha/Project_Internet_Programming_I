@@ -1,43 +1,52 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, computed } from "vue";
+import { useRouter } from "vue-router";
 
 const router = useRouter();
 
 const loginData = ref({
-  username: '',
-  email: '',
-  password: '',
+  username: "",
+  email: "",
+  password: "",
 });
 
 const submitted = ref(false);
 const passwordVisible = ref(false);
 
 const isFormValid = computed(() => {
-  return (
-    loginData.value.username.trim() !== '' &&
-    loginData.value.email.trim() !== '' &&
-    loginData.value.password.trim() !== ''
-  );
+  return loginData.value.email.trim() !== "" && loginData.value.password.trim() !== "";
 });
 
-const handleLogin = () => {
+const handleLogin = async () => {
   submitted.value = true;
   if (!isFormValid.value) return;
 
-  const { username, email, password } = loginData.value;
+  try {
+    const response = await fetch("http://localhost:5000/api/users/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    email: loginData.value.email,
+    password: loginData.value.password
+  })
+});
 
-  if (username === 'admin' && email === 'admin@gmail.com' && password === 'admin123') {
-    router.push('/adminDashboard');
-    return;
+
+    const result = await response.json();
+
+    if (response.ok) {
+      if (result.role === "admin") {
+        router.push("/adminDashboard");
+      } else {
+        router.push("/home");
+      }
+    } else {
+      alert(result.error || "Invalid credentials!");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Server error, please try again later.");
   }
-
-  if (username === 'user' && email === 'user@gmail.com' && password === '123456') {
-    router.push('/home');
-    return;
-  }
-
-  alert('Invalid credentials!');
 };
 
 const togglePasswordVisibility = () => {
@@ -45,9 +54,11 @@ const togglePasswordVisibility = () => {
 };
 
 const goToSignup = () => {
-  router.push('/signup');
+  router.push("/signup");
 };
 </script>
+
+
 
 <template>
   <div class="login-page-container">

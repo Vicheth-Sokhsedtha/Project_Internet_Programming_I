@@ -29,30 +29,48 @@ const isFormValid = computed(() => {
   )
 })
 
-const handleSignUp = () => {
+const handleSignUp = async () => {
   submitted.value = true
 
   if (isFormValid.value) {
-    console.log('Sign Up Successful:', signUpData.value)
+    try {
+      const response = await fetch("http://localhost:5000/api/users/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(signUpData.value),
+      })
 
-    // Emit successful-signup event to parent
-    emit('successful-signup')
+      if (!response.ok) {
+        throw new Error(`Signup failed: ${response.statusText}`)
+      }
 
-    // ✅ Navigate to Home page after signup
-    router.push({ name: 'home' })
+      const result = await response.json()
+      console.log("Sign Up Successful:", result)
 
-    // Clear form
-    signUpData.value = {
-      username: '',
-      email: '',
-      phoneNumber: '',
-      password: '',
+      // Emit successful-signup event to parent
+      emit("successful-signup")
+
+      // Navigate to Home page after signup
+      router.push({ name: "home" })
+
+      // Clear form
+      signUpData.value = {
+        username: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+      }
+      submitted.value = false
+    } catch (error) {
+      console.error("Sign Up Failed:", error)
     }
-    submitted.value = false
   } else {
-    console.error('Sign Up Failed: Please fill in all fields.')
+    console.error("Sign Up Failed: Please fill in all fields.")
   }
 }
+
 
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value
