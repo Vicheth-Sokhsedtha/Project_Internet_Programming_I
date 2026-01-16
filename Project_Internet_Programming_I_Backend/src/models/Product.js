@@ -6,19 +6,44 @@ const Product = sequelize.define("Product", {
     type: DataTypes.STRING,
     allowNull: false
   },
+  description: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  category: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   price: {
     type: DataTypes.FLOAT,
     allowNull: false
   },
+  oldPrice: {
+    type: DataTypes.FLOAT,
+    allowNull: true
+  },
   size: {
-    type: DataTypes.STRING
+    type: DataTypes.STRING,
+    allowNull: true
   },
   color: {
-    type: DataTypes.STRING
+    type: DataTypes.STRING,
+    allowNull: true
   },
   stock: {
-    type: DataTypes.INTEGER
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  image: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true
   }
+}, {
+  timestamps: true
 });
 
 module.exports = Product;
