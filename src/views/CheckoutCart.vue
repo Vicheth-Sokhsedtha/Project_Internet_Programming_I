@@ -161,18 +161,29 @@ export default defineComponent({
     };
 
     const pay = async () => {
+      // ✅ Validation 1: Check if user is logged in
+      const userId = localStorage.getItem("userId");
+      if (!userId) {
+        alert("❌ LOGIN REQUIRED\n\nYou must login to checkout.\n\nPlease login to your account first before proceeding with payment.");
+        router.push({ name: "login" });
+        return;
+      }
+
+      // ✅ Validation 2: Check if payment receipt is uploaded
       if (!uploadedFile.value) {
-        alert("Please upload payment receipt");
+        alert("❌ PAYMENT RECEIPT REQUIRED\n\nYou must upload your payment receipt (PNG/JPG image of the QR code payment proof) before submitting your order.\n\nPlease upload the receipt and try again.");
         return;
       }
 
+      // ✅ Validation 3: Check if delivery location is provided
       if (!storedLocation.value.trim()) {
-        alert("Please enter location");
+        alert("❌ DELIVERY ADDRESS REQUIRED\n\nPlease enter your delivery address before submitting your order.\n\nExample: 123 Main St, City, Country");
         return;
       }
 
+      // ✅ Validation 4: Check if cart is empty
       if (cartStore.items.length === 0) {
-        alert("Cart is empty");
+        alert("❌ EMPTY CART\n\nYour cart is empty. Please add items before checkout.");
         return;
       }
 
@@ -181,7 +192,7 @@ export default defineComponent({
 
         // ✅ Ensure productId is a valid integer
         if (!firstItem.id || isNaN(Number(firstItem.id))) {
-          alert("Invalid product ID");
+          alert("❌ INVALID PRODUCT\n\nThere's an issue with the product information. Please go back and try again.");
           return;
         }
 
@@ -195,7 +206,7 @@ export default defineComponent({
           "orderData",
           JSON.stringify({
             orderNumber: `ORD-${Date.now()}`, // ✅ unique order number
-            userId: 1, // replace with logged-in user ID
+            userId: Number(userId), // ✅ Use actual logged-in user ID
             productId: Number(firstItem.id), // ✅ ensure integer
             quantity: firstItem.qty,
             total: total.value,
@@ -216,16 +227,16 @@ export default defineComponent({
 
         if (response.ok) {
           const order = await response.json();
-          alert(`Payment submitted. Order Number: ${order.orderNumber}`);
+          alert(`✅ SUCCESS!\n\nYour payment has been submitted successfully.\n\nOrder Number: ${order.orderNumber}\n\nWe will review your receipt and confirm your order shortly.`);
           cartStore.clearCart();
           router.push({ name: "home" });
         } else {
           const errorText = await response.text();
-          alert(`Error submitting order: ${errorText}`);
+          alert(`❌ ORDER SUBMISSION FAILED\n\nError: ${errorText}\n\nPlease check all your information and try again.`);
         }
       } catch (error) {
         console.error("Payment error:", error);
-        alert("Error processing payment");
+        alert("❌ ERROR PROCESSING PAYMENT\n\nSomething went wrong while processing your order.\n\nPlease check your internet connection and try again.");
       }
     };
 
