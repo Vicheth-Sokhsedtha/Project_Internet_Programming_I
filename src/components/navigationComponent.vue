@@ -57,11 +57,19 @@
         </router-link>
 
         <!-- Login/Logout button -->
-        <router-link to="/login">
-          <button class="login-btn" @click="handleAuthClick">
-            {{ isLoggedIn ? 'Logout' : 'Login' }}
-          </button>
-        </router-link>
+        <!-- Login / User icon -->
+<div class="user-area">
+  <!-- NOT logged in -->
+  <router-link v-if="!isLoggedIn" to="/login">
+    <button class="login-btn">Login</button>
+  </router-link>
+
+  <!-- Logged in -->
+  <router-link v-else to="/user/dashboard" class="user-icon">
+    <span>👤</span>
+  </router-link>
+</div>
+
         <!-- Mobile Menu Toggle -->
         <button class="mobile-toggle" @click="toggleMobileMenu">
           <span class="hamburger" :class="{ 'active': mobileMenuOpen }">
@@ -393,6 +401,22 @@ const handleMobileAuth = () => {
   font-weight: 500;
   cursor: pointer;
   margin-top: 0.5rem;
+}
+.user-area {
+  display: flex;
+  align-items: center;
+}
+
+.user-icon {
+  font-size: 22px;
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+}
+
+.user-icon:hover {
+  background: #f2f2f2;
 }
 
 /* Responsive */
