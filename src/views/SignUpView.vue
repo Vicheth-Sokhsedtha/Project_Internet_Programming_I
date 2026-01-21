@@ -52,8 +52,16 @@ const handleSignUp = async () => {
       // Emit successful-signup event to parent
       emit("successful-signup")
 
-      // Navigate to Home page after signup
-      router.push({ name: "home" })
+      // Store authentication credentials
+      if (result.token && result.user && result.user.id) {
+        localStorage.setItem("authToken", result.token)
+        localStorage.setItem("userId", result.user.id)
+        // Navigate to Dashboard after signup so user can view their profile
+        router.push("/user/dashboard")
+      } else {
+        // Fallback to home if token/id not in response
+        router.push({ name: "home" })
+      }
 
       // Clear form
       signUpData.value = {
@@ -232,6 +240,19 @@ const goToLogin = () => {
   width: 20px;
   height: 20px;
   cursor: pointer;
+}
+
+/* Section Divider for Optional Info */
+.section-divider {
+  margin-top: 25px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 /* Eye Open Icon (Show Password) */

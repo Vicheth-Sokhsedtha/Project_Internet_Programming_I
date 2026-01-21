@@ -57,14 +57,23 @@
         </router-link>
 
         <!-- Login/Logout button -->
-        <router-link to="/login">
-          <button class="login-btn" @click="handleAuthClick">
-            {{ isLoggedIn ? 'Logout' : 'Login' }}
-          </button>
-        </router-link>
+        <!-- Login / User icon -->
+        <div class="user-area">
+          <!-- NOT logged in -->
+          <router-link v-if="!isUserLoggedIn" to="/login">
+            <button class="login-btn">Login</button>
+          </router-link>
+          <!-- User profile - shown after login -->
+          <router-link v-if="isUserLoggedIn" to="/user/dashboard" class="user-icon" title="My Dashboard">
+            👤
+          </router-link>
+
+        </div>
+
         <!-- Mobile Menu Toggle -->
         <button class="mobile-toggle" @click="toggleMobileMenu">
           <span class="hamburger" :class="{ 'active': mobileMenuOpen }">
+            <span></span>
             <span></span>
             <span></span>
             <span></span>
@@ -107,7 +116,7 @@
           </li>
           <li class="mobile-nav-item">
             <button class="mobile-auth-btn" @click="handleMobileAuth">
-              {{ isLoggedIn ? 'Logout' : 'Login' }}
+              {{ isUserLoggedIn ? 'Logout' : 'Login' }}
             </button>
           </li>
         </ul>
@@ -117,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '../stores/cart';
 
 // Props
@@ -133,12 +142,19 @@ const emit = defineEmits(['login', 'logout']);
 
 // State
 const mobileMenuOpen = ref(false);
+const isUserLoggedIn = ref(false);
 
 // Cart store
 const cartStore = useCartStore();
 
 // Computed
 const cartItemCount = computed(() => cartStore.itemCount);
+
+// Check login status from localStorage
+const checkLoginStatus = () => {
+  const token = localStorage.getItem("authToken");
+  isUserLoggedIn.value = !!token;
+};
 
 // Methods
 const toggleMobileMenu = () => {
@@ -150,7 +166,7 @@ const closeMobileMenu = () => {
 };
 
 const handleAuthClick = () => {
-  if (props.isLoggedIn) {
+  if (isUserLoggedIn.value) {
     emit('logout');
   } else {
     emit('login');
@@ -162,6 +178,13 @@ const handleMobileAuth = () => {
   handleAuthClick();
   closeMobileMenu();
 };
+
+// Initialize on mount
+onMounted(() => {
+  checkLoginStatus();
+  // Listen for storage changes
+  window.addEventListener('storage', checkLoginStatus);
+});
 </script>
 
 <style scoped>
@@ -393,6 +416,36 @@ const handleMobileAuth = () => {
   font-weight: 500;
   cursor: pointer;
   margin-top: 0.5rem;
+}
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.user-icon {
+  font-size: 24px;
+  text-decoration: none;
+  color: #333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+.user-icon:hover {
+  background: #2e2d2d;
+}
+
+.not-login-text {
+  font-size: 0.9rem;
+  color: #999;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 /* Responsive */

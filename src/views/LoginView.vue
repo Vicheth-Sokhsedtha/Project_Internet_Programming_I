@@ -35,6 +35,14 @@ const handleLogin = async () => {
     const result = await response.json();
 
     if (response.ok) {
+      // Store token and user ID in localStorage
+      if (result.token) {
+        localStorage.setItem("authToken", result.token);
+      }
+      if (result.id) {
+        localStorage.setItem("userId", result.id);
+      }
+
       if (result.role === "admin") {
         router.push("/adminDashboard");
       } else {
