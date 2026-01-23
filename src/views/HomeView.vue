@@ -47,11 +47,12 @@
         <MainCategory
           :discountProducts="discountProducts"
           :dress="dress"
-          :tshirts="tshirts"
+          :tshirts="tshirt"
           :jacket="jacket"
           :cropTop="cropTop"
           :shorts="shorts"
           :skirts="skirts"
+          :pants="pants"
           @selectCategory="handleCategorySelect"
         />
       </div>
@@ -208,12 +209,12 @@ const dress = computed(() => {
   return backendProducts.value.filter(p => p.category === 'Dresses').slice(0, 8);
 });
 
-const tshirts = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Shirts').slice(0, 8);
+const tshirt = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'T-Shirts&Shirts').slice(0, 8);
 });
 
 const jacket = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Jackets').slice(0, 8);
+  return backendProducts.value.filter(p => p.category === 'Jackets&Hoodies').slice(0, 8);
 });
 
 const cropTop = computed(() => {
@@ -226,6 +227,10 @@ const shorts = computed(() => {
 
 const skirts = computed(() => {
   return backendProducts.value.filter(p => p.category === 'Skirts').slice(0, 8);
+});
+
+const pants = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Jeans&Pants').slice(0, 8);
 });
 
 // --- Search state ---
@@ -242,10 +247,6 @@ const filteredProducts = computed(() =>
 const allProducts = computed(() => {
   return backendProducts.value;
 });
-
-
-
-
 
 
 // --- Contact Form State ---

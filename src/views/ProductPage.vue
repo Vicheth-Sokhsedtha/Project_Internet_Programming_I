@@ -33,11 +33,12 @@
         <CategoryTabs
           :discountProducts="discountProducts"
           :dress="dress"
-          :tshirts="tshirts"
+          :tshirts="shirt"
           :jacket="jacket"
           :cropTop="cropTop"
           :shorts="shorts"
           :skirts="skirts"
+          :jeans="pants"
           @selectCategory="handleCategorySelect"
         />
       </div>
@@ -48,11 +49,12 @@
 
       <ProductSection title="" :items="discountProducts" />
       <ProductSection title="Dress" :items="dress" />
-      <ProductSection title="T-Shirts & Shirt" :items="tshirts" />
-      <ProductSection title="Jacket & Hoodie" :items="jacket" />
+      <ProductSection title="Shirts&T-Shirts" :items="shirt" />
+      <ProductSection title="Jackets&Hoodies" :items="jacket" />
       <ProductSection title="Crop Top" :items="cropTop" />
       <ProductSection title="Shorts" :items="shorts" />
       <ProductSection title="Skirts" :items="skirts" />
+      <ProductSection title="Jeans&Pants" :items="pants" />
     </div>
   </div>
 </template>
@@ -103,12 +105,13 @@ const dress = computed(() => {
   return backendProducts.value.filter(p => p.category === 'Dresses').slice(0, 8);
 });
 
-const tshirts = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Shirts').slice(0, 8);
+const shirt = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'T-Shirts&Shirts').slice(0, 8);
 });
 
+
 const jacket = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Jackets').slice(0, 8);
+  return backendProducts.value.filter(p => p.category === 'Jackets&Hoodies').slice(0, 8);
 });
 
 const cropTop = computed(() => {
@@ -122,6 +125,18 @@ const shorts = computed(() => {
 const skirts = computed(() => {
   return backendProducts.value.filter(p => p.category === 'Skirts').slice(0, 8);
 });
+
+const pants = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Jeans&Pants').slice(0, 8);
+});
+
+// const pants = computed(() => {
+//   return backendProducts.value.filter(p => p.category === 'Pants').slice(0, 8);
+// });
+
+
+
+
 
 // --- Search state ---
 const searchQuery = ref("");

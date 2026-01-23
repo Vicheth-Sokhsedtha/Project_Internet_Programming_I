@@ -31,7 +31,7 @@ const addToCart = () => {
   cartStore.addItem({
     ...product,
     size: selectedSize.value,
-    qty: quantity.value,   // ✅ matches interface
+    qty: quantity.value,   // matches interface
   });
 
    router.push({ name: 'Cart' });

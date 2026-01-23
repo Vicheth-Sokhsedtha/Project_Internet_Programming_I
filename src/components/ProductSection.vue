@@ -52,7 +52,7 @@ defineProps<{
   margin-bottom: 40px;
 }
 
-/* 🔥 Perfect Figma 4-column grid */
+/* Perfect Figma 4-column grid */
 .grid {
   display: grid;
   grid-template-columns: repeat(4, 281px); /* exact card width */
