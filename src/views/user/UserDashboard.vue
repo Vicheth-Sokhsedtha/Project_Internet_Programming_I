@@ -15,7 +15,20 @@
     <div v-else class="dashboard-content">
       <!-- SIDEBAR -->
       <aside class="sidebar">
-        <img class="avatar" src="/image/picUser.png" alt="User Avatar" />
+        <label class="avatar-wrapper">
+    <img
+      class="avatar"
+        :src="userData.avatar || '/image/picUser.png'"
+        alt="User Avatar"
+    />
+    <input
+      type="file"
+      accept="image/*"
+      hidden
+      @change="handleAvatarChange"
+  />
+</label>
+
         <h3 class="username">{{ userData.username }}</h3>
 
         <nav>
@@ -154,6 +167,62 @@ const updating = ref(false);
 const error = ref("");
 const successMessage = ref("");
 
+const handleAvatarChange = async (event: Event) => {
+  const file = (event.target as HTMLInputElement)?.files?.[0];
+  if (!file) return;
+
+  const userId = getUserId();
+  const token = getAuthToken();
+
+  if (!userId) {
+    error.value = "Please login again.";
+    redirectToLogin();
+    return;
+  }
+
+  // preview (temporary)
+  const previewUrl = URL.createObjectURL(file);
+  userData.value.avatar = previewUrl;
+
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  try {
+    const response = await fetch(`http://localhost:5000/api/users/${userId}/avatar`, {
+      method: "POST",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error || "Upload failed");
+    }
+
+    console.log("Upload result:", result);
+
+    // update avatar URL
+    userData.value.avatar = result.avatarUrl;
+
+    successMessage.value = "Profile image updated!";
+    setTimeout(() => (successMessage.value = ""), 3000);
+  } catch (err) {
+    console.error(err);
+    error.value = err instanceof Error ? err.message : "Failed to upload image";
+  } finally {
+    // cleanup preview
+    URL.revokeObjectURL(previewUrl);
+
+    // reset input so user can re-upload same file again
+    (event.target as HTMLInputElement).value = "";
+  }
+};
+
+
+
 const userData = ref({
   id: null,
   username: "",
@@ -163,6 +232,7 @@ const userData = ref({
   city: "",
   postalCode: "",
   country: "",
+  avatar: "",
 });
 
 const passwordData = ref({
@@ -228,6 +298,7 @@ const fetchUserData = async () => {
       city: data.city || "",
       postalCode: data.postalCode || "",
       country: data.country || "",
+      avatar: data.avatar || "",
     };
 
     // Fetch orders for this user
@@ -395,6 +466,23 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.avatar-wrapper {
+  cursor: pointer;
+  position: relative;
+}
+
+.avatar-wrapper::after {
+  content: "Change";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  font-size: 10px;
+  padding: 4px 6px;
+  border-radius: 6px;
+}
+
 /* PAGE */
 .dashboard {
   display: flex;
