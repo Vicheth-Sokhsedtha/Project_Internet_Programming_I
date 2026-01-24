@@ -1,51 +1,73 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { getProductById, Product } from '../data/product';
-import { useCartStore } from '../stores/cart'; // adjust path if needed
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useCartStore } from '@/stores/cart'
 
-const route = useRoute();
-const router = useRouter();
-const cartStore = useCartStore();
+interface Product {
+  id: number
+  name: string
+  price: number
+  oldPrice?: number
+  image: string
+  description?: string
+  sizes?: string[]
+}
 
-const productId = Number(route.params.id);
-const product = getProductById(productId) as Product | undefined;
+const route = useRoute()
+const router = useRouter()
+const cartStore = useCartStore()
 
-// reactive state
-const selectedSize = ref(product?.sizes[0] ?? 'M');
-const quantity = ref(1);
+const product = ref<Product | null>(null)
+const loading = ref(true)
 
-const totalPrice = computed(() => (product ? product.price * quantity.value : 0));
+const selectedSize = ref('M')
+const quantity = ref(1)
 
-const increaseQty = () => {
-  quantity.value++;
-};
+const fetchProduct = async () => {
+  try {
+    const res = await fetch(`http://localhost:5000/api/products/${route.params.id}`)
+    const data: Product = await res.json()
+    product.value = data
+    selectedSize.value = product.value?.sizes?.[0] ?? 'M'
+  } catch (err) {
+    console.error(err)
+  } finally {
+    loading.value = false
+  }
+}
 
-const decreaseQty = () => {
-  if (quantity.value > 1) quantity.value--;
-};
+onMounted(fetchProduct)
 
+const totalPrice = computed(() => (product.value ? product.value.price * quantity.value : 0))
+
+const increaseQty = () => quantity.value++
+const decreaseQty = () => quantity.value > 1 && quantity.value--
+
+const goBack = () => router.back()
+
+// ✅ Correct Add to Cart function
 const addToCart = () => {
-  if (!product) return;
-  alert(`Added ${quantity.value} ${product.name}(s) - Size ${selectedSize.value} to cart.`);
+  if (!product.value) return
+
   cartStore.addItem({
-    ...product,
+    // id: product.value.id,
+    name: product.value.name,
+    price: product.value.price,
+    image: product.value.image,
     size: selectedSize.value,
-    qty: quantity.value,   // matches interface
-  });
+    qty: quantity.value,
+  })
 
-   router.push({ name: 'Cart' });
-  // Reset quantity after adding to cart
-  quantity.value = 1;
-};
-
-const goToCart = () => {
-  router.push({ name: 'Cart' });
-};
+  router.push({ name: 'Cart' }) // navigate to Cart page
+}
 </script>
 
 <template>
-  <section v-if="product" class="detail-section">
+  <section v-if="loading" class="not-found">
+    <p>Loading product...</p>
+  </section>
+
+  <section v-else-if="product" class="detail-section">
     <div class="detail-container">
       <!-- Product Image -->
       <div class="image-box">
@@ -61,9 +83,7 @@ const goToCart = () => {
           <span v-if="product.oldPrice" class="old-price">
             ${{ product.oldPrice.toFixed(2) }}
           </span>
-          <span class="current-price">
-            ${{ product.price.toFixed(2) }}
-          </span>
+          <span class="current-price"> ${{ product.price.toFixed(2) }} </span>
         </div>
 
         <!-- Size Selector -->
@@ -89,19 +109,17 @@ const goToCart = () => {
             <span>{{ quantity }}</span>
             <button @click="increaseQty">+</button>
           </div>
-
-          <p class="totalprice">Total: ${{ totalPrice.toFixed(2) }}</p>
+          <p class="unit-price">Price per unit: ${{ product.price.toFixed(2) }}/1</p>
         </div>
 
         <!-- Unit Price -->
-        <p class="unit-price">
-          Price per unit: ${{ product.price.toFixed(2) }}/{{ quantity }}
-        </p>
+        <p class="totalprice">Total: ${{ totalPrice.toFixed(2) }}</p>
 
-        <!-- Add to Cart -->
+        <!-- Buttons -->
         <div class="button-group">
-          <button class="addTocart" @click="addToCart" >Add to Cart</button>
-          <!-- <button class="view-cart-btn" @click="goToCart">View Cart ({{ cartStore.itemCount }})</button> -->
+          <!-- ✅ Fix: lowercase click -->
+          <button class="addTocart" @click="addToCart">Add to Cart</button>
+          <button class="addTocart" style="background: #555" @click="goBack">Back</button>
         </div>
       </div>
     </div>
@@ -115,7 +133,7 @@ const goToCart = () => {
 <style scoped>
 .detail-section {
   padding: 60px 80px;
-  background: #D9CFC7;
+  background: #d9cfc7;
   display: flex;
   justify-content: center;
 }
@@ -128,7 +146,7 @@ const goToCart = () => {
   background: white;
   border-radius: 20px;
   padding: 40px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .image-box {
