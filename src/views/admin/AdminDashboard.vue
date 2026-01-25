@@ -26,37 +26,58 @@
         v-model="search"
         :placeholder="'Search ' + activeTabLabel"
       />
+      <!-- Add after the search input in AdminDashboard.vue -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <h3>{{ stats.totalProducts || 0 }}</h3>
+            <p>Total Products</p>
+          </div>
+          <div class="stat-card">
+            <h3>{{ stats.totalUsers || 0 }}</h3>
+            <p>Total Users</p>
+          </div>
+          <div class="stat-card">
+            <h3>{{ stats.pendingOrders || 0 }}</h3>
+            <p>Pending Orders</p>
+          </div>
+          <div class="stat-card">
+            <h3>{{ stats.completedOrders || 0 }}</h3>
+            <p>Completed Orders</p>
+          </div>
+          <div class="stat-card">
+            <h3>{{ stats.activePromotions || 0 }}</h3>
+            <p>Active Promotions</p>
+          </div>
+        </div>
 
       <div class="card">
         <div class="card-header">
-        <h2>{{ activeTabLabel }}</h2>
-        <button
-          v-if="currentTab !== 'users'"
-          class="add-btn"
-          @click="openAddModal"
-        >
-          + Add New
-        </button>
+          <h2>{{ activeTabLabel }}</h2>
+          <button
+            v-if="currentTab !== 'users'"
+            class="add-btn"
+            @click="openAddModal"
+          >
+            + Add New
+          </button>
         </div>
-
 
         <table>
           <thead>
             <tr v-if="currentTab === 'orders'">
-                <th>ID</th>
-                <th>customer</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Location</th>
-                <th>Payment File</th>
-                <th>Action</th>
-
+              <th>ID</th>
+              <th>Customer</th>
+              <th>Date</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Location</th>
+              <th>Products</th>
+              <th>Payment File</th>
+              <th>Action</th>
             </tr>
             <tr v-else-if="currentTab === 'users'">
               <th>Username</th><th>Email</th><th>Role</th><th>Created At</th><th>Action</th>
             </tr>
-
             <tr v-else-if="currentTab === 'products'">
               <th>Product</th><th>Category</th><th>Price</th><th>Stock</th><th>Action</th>
             </tr>
@@ -67,38 +88,72 @@
 
           <tbody>
             <tr v-for="(item, index) in filteredData" :key="index">
+              <!-- ORDERS -->
               <template v-if="currentTab === 'orders'">
-                 <!-- <tr v-for="(item, index) in filteredData" :key="index" v-if="currentTab === 'orders'"> -->
-                  <td><span class="order-id">{{ item.orderNumber }}</span></td>
-                   <td>{{ item.User?.username }}</td>
-
-                  <td>{{ formatDate(item.createdAt) }}</td>
-                  <td>${{ item.total }}</td>
-                  <td><span :class="['status', item.status.toLowerCase()]">{{ item.status }}</span></td>
-                  <td>{{ item.deliveryAddress }}</td>
-                  <td>
-                    <a v-if="item.paymentProof" :href="item.paymentProof" target="_blank">View Receipt</a>
-                    <span v-else>No file</span>
-                  </td>
-                  <!-- <td>
-                    <button class="edit" @click="editItem(item)">Edit</button>
-                    <button class="delete" @click="deleteItem(item)">Delete</button>
-                  </td> -->
-
+                <td><span class="order-id">{{ item.orderNumber || item.id }}</span></td>
+                <td>
+                  <div v-if="item.user">
+                    <strong>{{ item.user.username }}</strong><br>
+                    <small>{{ item.user.email }}</small>
+                  </div>
+                  <div v-else-if="item.userId">
+                    User ID: {{ item.userId }}
+                  </div>
+                  <span v-else>Guest</span>
+                </td>
+                <td>{{ formatDate(item.date || item.createdAt) }}</td>
+                <td>${{ item.total?.toFixed(2) || '0.00' }}</td>
+                <td>
+                  <span :class="['status', item.status?.toLowerCase()]">
+                    {{ item.status || 'Pending' }}
+                  </span>
+                </td>
+                <td>{{ item.deliveryAddress || item.userLocation || 'N/A' }}</td>
+                <td>
+                  <!-- Display product names and quantities -->
+                  <div v-if="item.items && item.items.length">
+                    <div v-for="(prod, idx) in item.items" :key="idx" class="product-item">
+                      <strong>{{ prod.productName || 'Product' }}</strong><br>
+                      Size: {{ prod.size || prod.productSize || 'N/A' }}
+                      × {{ prod.quantity || 1 }}<br>
+                      <small>${{ (prod.price || 0).toFixed(2) }} each</small>
+                    </div>
+                  </div>
+                  <div v-else-if="item.productName">
+                    <!-- For backward compatibility with single product orders -->
+                    <strong>{{ item.productName }}</strong><br>
+                    Size: {{ item.productSize || 'N/A' }}
+                    × {{ item.quantity || 1 }}<br>
+                    <small>${{ (item.price || 0).toFixed(2) }} each</small>
+                  </div>
+                  <span v-else class="no-products">No products</span>
+                </td>
+                <td>
+                  <a
+                    v-if="item.paymentProof"
+                    :href="'/uploads/' + item.paymentProof"
+                    target="_blank"
+                    class="receipt-link"
+                  >
+                    View Receipt
+                  </a>
+                  <span v-else class="no-receipt">No file</span>
+                </td>
+                <!-- <td>
+                  <button class="edit" @click="editItem(item)">Edit</button>
+                  <button class="delete" @click="deleteItem(item)">Delete</button>
+                </td> -->
               </template>
 
+              <!-- USERS -->
+              <template v-else-if="currentTab === 'users'">
+                <td>{{ item.username }}</td>
+                <td>{{ item.email }}</td>
+                <td>{{ item.role }}</td>
+                <td>{{ new Date(item.createdAt).toLocaleDateString() }}</td>
+              </template>
 
-
-            <template v-else-if="currentTab === 'users'">
-              <td>{{ item.username }}</td>
-              <td>{{ item.email }}</td>
-              <td>{{ item.role }}</td>
-              <td>{{ new Date(item.createdAt).toLocaleDateString() }}</td>
-
-            </template>
-
-
-
+              <!-- PRODUCTS -->
               <template v-else-if="currentTab === 'products'">
                 <td>{{ item.name }}</td>
                 <td>{{ item.category }}</td>
@@ -106,6 +161,7 @@
                 <td>{{ item.stock }} units</td>
               </template>
 
+              <!-- PROMOTIONS -->
               <template v-else-if="currentTab === 'promotions'">
                 <td>{{ item.code }}</td>
                 <td>{{ item.discount }}%</td>
@@ -160,16 +216,42 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
-// import axios from "axios";
-
 
 const router = useRouter();
 
+const stats = ref({
+  totalProducts: 0,
+  totalUsers: 0,
+  pendingOrders: 0,
+  completedOrders: 0,
+  activePromotions: 0
+});
+
+async function loadStats() {
+  try {
+    const [products, users, orders, promotions] = await Promise.all([
+      axios.get("http://localhost:5000/api/admin/products"),
+      axios.get("http://localhost:5000/api/admin/users"),
+      axios.get("http://localhost:5000/api/admin/orders"),
+      axios.get("http://localhost:5000/api/admin/promotions")
+    ]);
+
+    stats.value.totalProducts = products.data.length;
+    stats.value.totalUsers = users.data.length;
+    stats.value.pendingOrders = orders.data.filter(o => o.status === 'Pending').length;
+    stats.value.completedOrders = orders.data.filter(o => o.status === 'Completed').length;
+    stats.value.activePromotions = promotions.data.filter(p => p.active).length;
+  } catch (error) {
+    console.error("Error loading stats:", error);
+  }
+}
+
 /* NAVIGATION */
+
 const currentTab = ref("users");
 const tabs = [
   { id: "orders", name: "Order List" },
-  { id: "users", name: "User Info" },   // ✅ renamed to users
+  { id: "users", name: "User Info" },
   { id: "products", name: "Products List" },
   { id: "promotions", name: "Manage Promotion" },
 ];
@@ -182,14 +264,17 @@ const fields: Record<string, Array<{ key: string; label: string; type: string; o
     { key: "date", label: "Order Date", type: "date" },
     { key: "total", label: "Total Amount", type: "number" },
     { key: "status", label: "Status", type: "select", options: ["Pending", "Completed"] },
+    { key: "deliveryAddress", label: "Delivery Address", type: "text" },
+    { key: "quantity", label: "Quantity", type: "number" },
+    { key: "paymentProof", label: "Payment Proof", type: "text" },
+
   ],
   users: [
-  { key: "username", label: "Username", type: "text" },
-  { key: "email", label: "Email", type: "email" },
-  { key: "role", label: "Role", type: "select", options: ["user", "admin"] },
-  { key: "createdAt", label: "Created At", type: "date" },
+    { key: "username", label: "Username", type: "text" },
+    { key: "email", label: "Email", type: "email" },
+    { key: "role", label: "Role", type: "select", options: ["user", "admin"] },
+    { key: "createdAt", label: "Created At", type: "date" },
   ],
-
   products: [
     { key: "name", label: "Product Name", type: "text" },
     { key: "category", label: "Category", type: "text" },
@@ -205,7 +290,7 @@ const fields: Record<string, Array<{ key: string; label: string; type: string; o
 };
 
 /* STATE */
-const db = ref<any>({ orders: [], users: [], products: []});
+const db = ref<any>({ orders: [], users: [], products: [] });
 const search = ref("");
 const showModal = ref(false);
 const editing = ref(false);
@@ -221,6 +306,15 @@ const filteredData = computed(() => {
 });
 
 
+const selectedReceipt = ref(null);
+
+const showReceipt = (filename) => {
+  if (selectedReceipt.value === filename) {
+    selectedReceipt.value = null;
+  } else {
+    selectedReceipt.value = filename;
+  }
+};
 
 /* CRUD */
 function openAddModal() {
@@ -308,7 +402,10 @@ function handleLogout() {
 
 
 
-onMounted(loadData);
+onMounted(async () => {
+  await loadData();
+  await loadStats();
+});
 </script>
 
 
@@ -321,6 +418,7 @@ onMounted(loadData);
   font-family: 'Segoe UI', sans-serif;
 }
 
+
 /* SIDEBAR */
 .sidebar {
   width: 220px;
@@ -331,6 +429,74 @@ onMounted(loadData);
   align-items: center;
 }
 
+.stats-cards {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  min-width: 180px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+/* Add to AdminDashboard.vue styles */
+.product-item {
+  margin-bottom: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border-left: 3px solid #007bff;
+}
+
+.product-item:last-child {
+  margin-bottom: 0;
+}
+
+.product-item small {
+  color: #666;
+  font-size: 12px;
+}
+
+.no-products {
+  color: #999;
+  font-style: italic;
+}
+
+.receipt-link {
+  color: #007bff;
+  text-decoration: none;
+  padding: 4px 8px;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.receipt-link:hover {
+  background: #007bff;
+  color: white;
+  text-decoration: none;
+}
+
+.no-receipt {
+  color: #999;
+  font-style: italic;
+}
+.stat-card h3 {
+  font-size: 28px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.stat-card p {
+  color: #666;
+  font-size: 14px;
+}
 .avatar {
   width: 110px;
   border-radius: 50%;
