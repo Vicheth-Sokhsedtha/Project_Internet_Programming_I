@@ -39,6 +39,7 @@ const props = defineProps<{
 
 const addToCart = () => {
   cartStore.addItem({
+    id: props.id,
     name: props.name,
     price: props.price,
     image: props.image,

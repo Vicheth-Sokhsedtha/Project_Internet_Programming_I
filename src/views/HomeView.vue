@@ -161,12 +161,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed ,onMounted} from "vue";
-import SearchBar from "../components/SearchBar.vue";
-import MainCategory from "../components/MainCategory.vue";
-import CategoryTabs from "../components/CategoryTabs.vue";
-import ProductSection from "../components/ProductSection.vue";
-
+import { ref, computed, onMounted } from 'vue'
+import SearchBar from '../components/SearchBar.vue'
+import MainCategory from '../components/MainCategory.vue'
+import CategoryTabs from '../components/CategoryTabs.vue'
+import ProductSection from '../components/ProductSection.vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useCartStore } from '../stores/cart'
 interface Product {
   id: number;
   name: string;

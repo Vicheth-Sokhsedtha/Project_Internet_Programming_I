@@ -14,21 +14,21 @@ export interface CartItem {
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([]);
 
-  const addItem = (item: Omit<CartItem, 'id'>) => {
+
+
+  const addItem = (item: CartItem) => {
     const existingItem = items.value.find(
-      i => i.name === item.name && i.size === item.size
+      i => i.id === item.id && i.size === item.size
     );
 
     if (existingItem) {
       existingItem.qty += item.qty;
     } else {
-      const newItem = {
-        ...item,
-        id: Date.now()
-      };
-      items.value.push(newItem);
+      items.value.push(item); // ✅ use the DB id directly
     }
   };
+
+
 
   const updateQty = (id: number, qty: number) => {
     const item = items.value.find(i => i.id === id);

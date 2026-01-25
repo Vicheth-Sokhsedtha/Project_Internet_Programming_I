@@ -116,247 +116,92 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed, ref } from "vue";
-import { useRouter } from "vue-router";
-import { useCartStore } from "../stores/cart";
+import { defineComponent, ref, computed } from "vue";
+import { useCartStore } from "../stores/cart"; // adjust path if needed
 
 export default defineComponent({
   name: "CheckoutCart",
-
   setup() {
-    const router = useRouter();
     const cartStore = useCartStore();
 
-    const discount = computed(() => 0);
-    const delivery = computed(() => 5.0);
-    const total = computed(
-      () => cartStore.subtotal - discount.value + delivery.value
-    );
-
-    // Processing state
+    const receiptFile = ref<File | null>(null);
+    const locationFile = ref<File | null>(null);
     const isProcessing = ref(false);
 
-    // File inputs
-    const uploadedFile = ref<File | null>(null);
-    const locationImageFile = ref<File | null>(null);
-    const receiptInput = ref<HTMLInputElement | null>(null);
-    const locationInput = ref<HTMLInputElement | null>(null);
-
-    // Form fields
     const storedLocation = ref("");
     const contactNumber = ref("");
     const email = ref("");
 
+    const discount = computed(() => 0);
+    const delivery = computed(() => 5);
+    const total = computed(
+      () => cartStore.subtotal - discount.value + delivery.value
+    );
+
     const handleFileUpload = (event: Event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (file) {
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          alert("❌ File too large! Please upload an image smaller than 5MB.");
-          if (receiptInput.value) receiptInput.value.value = "";
-          return;
-        }
-        uploadedFile.value = file;
-        console.log(`✅ Receipt file selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+      const target = event.target as HTMLInputElement;
+      if (target.files && target.files.length > 0) {
+        receiptFile.value = target.files[0];
       }
     };
 
     const handleLocationImageUpload = (event: Event) => {
-      const file = (event.target as HTMLInputElement).files?.[0];
-      if (file) {
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          alert("❌ File too large! Please upload an image smaller than 5MB.");
-          if (locationInput.value) locationInput.value.value = "";
-          return;
-        }
-        locationImageFile.value = file;
-        console.log(`✅ Location image selected: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`);
+      const target = event.target as HTMLInputElement;
+      if (target.files && target.files.length > 0) {
+        locationFile.value = target.files[0];
       }
     };
 
     const pay = async () => {
-      // Prevent double submission
-      if (isProcessing.value) {
-        console.log("⏳ Already processing, please wait...");
+      if (!receiptFile.value) {
+        alert("⚠️ Payment receipt is required. Please upload your receipt before proceeding.");
         return;
       }
-
-      console.log("🔍 Starting payment validation...");
-
-      // ✅ Validation 1: Check if user is logged in
-      const userId = localStorage.getItem("userId");
-      if (!userId) {
-        alert(
-          "❌ LOGIN REQUIRED\n\nYou must login to checkout.\n\nPlease login to your account first."
-        );
-        router.push({ name: "login" });
+      if (!storedLocation.value) {
+        alert("📍 Location is required. Please enter your delivery address.");
         return;
       }
-      console.log("✅ User ID:", userId);
-
-      // ✅ Validation 2: Check if payment receipt is uploaded
-      if (!uploadedFile.value) {
-        alert(
-          "❌ PAYMENT RECEIPT REQUIRED\n\nPlease upload your payment receipt (screenshot/photo of payment confirmation)."
-        );
+      if (!contactNumber.value) {
+        alert("📞 Contact number is required. Please provide a valid phone number.");
         return;
       }
-      console.log("✅ Payment receipt uploaded");
-
-      // ✅ Validation 3: Check if delivery location is provided
-      if (!storedLocation.value.trim()) {
-        alert(
-          "❌ DELIVERY ADDRESS REQUIRED\n\nPlease enter your delivery address.\n\nExample: 123 Main St, City, Country"
-        );
+      if (!email.value) {
+        alert("✉️ Email address is required. Please enter your email.");
         return;
       }
-      console.log("✅ Delivery address:", storedLocation.value);
-
-      // ✅ Validation 4: Check contact number
-      if (!contactNumber.value.trim()) {
-        alert("❌ CONTACT NUMBER REQUIRED\n\nPlease enter your contact number.");
-        return;
-      }
-      console.log("✅ Contact number:", contactNumber.value);
-
-      // ✅ Validation 5: Check email
-      if (!email.value.trim()) {
-        alert("❌ EMAIL REQUIRED\n\nPlease enter your email address.");
-        return;
-      }
-      console.log("✅ Email:", email.value);
-
-      // ✅ Validation 6: Check if cart is empty
-      if (cartStore.items.length === 0) {
-        alert("❌ EMPTY CART\n\nYour cart is empty. Please add items before checkout.");
-        return;
-      }
-      console.log("✅ Cart has", cartStore.items.length, "items");
 
       isProcessing.value = true;
-
       try {
-        // Prepare items for bulk order
-        const items = cartStore.items.map((item) => ({
-          productId: Number(item.id),
-          quantity: Number(item.qty),
-          total: Number((item.price * item.qty).toFixed(2)),
-        }));
-
-        console.log("📦 Prepared items:", items);
-
-        // Create orderData object
-        const orderDataObj = {
-          userId: Number(userId),
-          items: items,
-          paymentMethod: "QR Code",
-          deliveryAddress: storedLocation.value.trim(),
-          contactNumber: contactNumber.value.trim(),
-          email: email.value.trim(),
-        };
-
-        console.log("📋 Order data object:", orderDataObj);
-
-        // Build FormData payload
         const formData = new FormData();
+        formData.append("receipt", receiptFile.value);
+        if (locationFile.value) formData.append("locationImage", locationFile.value);
+        formData.append("storedLocation", storedLocation.value);
+        formData.append("contactNumber", contactNumber.value);
+        formData.append("email", email.value);
+        formData.append("items", JSON.stringify(cartStore.items));
+        formData.append("total", total.value.toString());
 
-        // Add receipt file (required)
-        formData.append("receipt", uploadedFile.value);
-        console.log("✅ Added receipt to FormData");
-
-        // Add location image if provided
-        if (locationImageFile.value) {
-          formData.append("locationImage", locationImageFile.value);
-          console.log("✅ Added location image to FormData");
-        }
-
-        // IMPORTANT: Convert orderData to JSON string
-        const orderDataString = JSON.stringify(orderDataObj);
-        formData.append("orderData", orderDataString);
-        console.log("✅ Added orderData to FormData (stringified)");
-        console.log("📤 Order data string:", orderDataString);
-
-        // Log FormData contents
-        console.log("\n📤 Sending FormData with:");
-        formData.forEach((value, key) => {
-          if (value instanceof File) {
-            console.log(`  - ${key}: File(${value.name}, ${value.size} bytes)`);
-          } else {
-            console.log(`  - ${key}: ${value}`);
-          }
-        });
-
-
-        const apiUrl = "http://localhost:5000/api/orders/bulk";
-        console.log(`\n🌐 Sending POST request to: ${apiUrl}`);
-
-        // Send to backend
-        const response = await fetch(apiUrl, {
+        await fetch("/api/orders", {
           method: "POST",
           body: formData,
-          // Don't set Content-Type header - browser will set it automatically with boundary
         });
 
-        console.log("📥 Response status:", response.status, response.statusText);
-
-        if (response.ok) {
-          const result = await response.json();
-          console.log("✅ Order created successfully:", result);
-
-          alert(
-            `✅ SUCCESS!\n\nYour payment has been submitted successfully.\n\n${result.orders.length} order(s) created.\n\nWe will review your receipt and confirm your order shortly.`
-          );
-
-          // Clear cart
-          cartStore.clearCart();
-
-          // Clear form
-          storedLocation.value = "";
-          contactNumber.value = "";
-          email.value = "";
-          uploadedFile.value = null;
-          locationImageFile.value = null;
-
-          // Clear file inputs
-          if (receiptInput.value) receiptInput.value.value = "";
-          if (locationInput.value) locationInput.value.value = "";
-
-          // Redirect to home or orders page
-          router.push({ name: "home" });
-        } else {
-          const errorText = await response.text();
-          console.error("❌ Server error response:", errorText);
-
-          let errorMessage = errorText;
-          try {
-            const errorJson = JSON.parse(errorText);
-            errorMessage = errorJson.error || errorText;
-          } catch (e) {
-            // errorText is not JSON, use as is
-          }
-
-          alert(
-            `❌ ORDER SUBMISSION FAILED\n\nError: ${errorMessage}\n\nPlease check your information and try again.`
-          );
-        }
-      } catch (error) {
-        console.error("❌ Payment error:", error);
-        alert(
-          `❌ ERROR PROCESSING PAYMENT\n\nSomething went wrong while processing your order.\n\nError: ${error}\n\nPlease try again later.`
-        );
+        alert("✅ Payment submitted successfully! Thank you for your order.");
+        cartStore.clearCart();
+      } catch (err) {
+        console.error(err);
+        alert("❌ Something went wrong while submitting your payment. Please try again.");
       } finally {
         isProcessing.value = false;
-        console.log("✅ Payment process completed");
       }
-    };
-
-    const goToCart = () => {
-      router.push({ name: "Cart" });
     };
 
     const goToProductPage = () => {
-      router.push({ name: "product" });
+      window.location.href = "/products";
+    };
+
+    const goToCart = () => {
+      window.location.href = "/cart";
     };
 
     return {
@@ -364,17 +209,15 @@ export default defineComponent({
       discount,
       delivery,
       total,
-      isProcessing,
-      receiptInput,
-      locationInput,
-      handleFileUpload,
-      handleLocationImageUpload,
-      pay,
-      goToCart,
-      goToProductPage,
       storedLocation,
       contactNumber,
       email,
+      isProcessing,
+      handleFileUpload,
+      handleLocationImageUpload,
+      pay,
+      goToProductPage,
+      goToCart,
     };
   },
 });

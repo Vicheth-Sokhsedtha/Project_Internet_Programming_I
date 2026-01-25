@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useCartStore } from '@/stores/cart'
+import { useCartStore } from '../stores/cart'
 
 interface Product {
   id: number
@@ -50,16 +50,18 @@ const addToCart = () => {
   if (!product.value) return
 
   cartStore.addItem({
-    // id: product.value.id,
+    id: product.value.id,   // ✅ allowed
     name: product.value.name,
     price: product.value.price,
     image: product.value.image,
     size: selectedSize.value,
     qty: quantity.value,
-  })
+  });
+
 
   router.push({ name: 'Cart' }) // navigate to Cart page
 }
+
 </script>
 
 <template>
