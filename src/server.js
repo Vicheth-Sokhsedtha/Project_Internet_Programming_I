@@ -3,6 +3,8 @@ const cors = require("cors");
 const sequelize = require("./config/db");
 const seedData = require("./seeds/seedData");
 
+
+
 // Import models before syncing
 const { User, Product, Order, Promotion } = require("./models");
 
@@ -10,6 +12,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+
+// Static folder for uploads
+const path = require("path");
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 // test route
 app.get("/", (req, res) => {
   res.send("Women Clothes Backend is running");

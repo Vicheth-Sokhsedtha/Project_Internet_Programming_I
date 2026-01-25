@@ -15,7 +15,7 @@ const { User, Product, Order, Promotion } = require('./src/models');
 const userRoutes = require('./src/routes/user.routes');
 const productRoutes = require('./src/routes/product.routes');
 const adminRoutes = require('./src/routes/admin.routes');
-
+const orderRoutes = require("./src/routes/orders.routes");
 
 const app = express();
 const PORT = 5000;
@@ -32,6 +32,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
 
 // Associations
 

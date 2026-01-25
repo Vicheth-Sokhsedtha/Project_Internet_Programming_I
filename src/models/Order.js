@@ -9,8 +9,8 @@ const Order = sequelize.define("Order", {
   },
   orderNumber: {
     type: DataTypes.STRING,
-    unique: true,
-    allowNull: false
+    unique: true
+    // removed allowNull: false so the hook can populate it
   },
   userId: {
     type: DataTypes.INTEGER,
@@ -38,16 +38,17 @@ const Order = sequelize.define("Order", {
 }, {
   timestamps: true,
   hooks: {
-    beforeCreate: async (order) => {
-      const [results] = await sequelize.query(
+    beforeCreate: async (order, options) => {
+      const transaction = options.transaction; // use transaction if available
+      const [rows] = await sequelize.query(
         'SELECT MAX(CAST(orderNumber AS UNSIGNED)) as maxNum FROM Orders WHERE orderNumber REGEXP "^[0-9]+$"',
-        { raw: true }
+        { transaction }
       );
-      const maxNum = results[0]?.maxNum || 0;
+      const maxNum = rows[0]?.maxNum || 0;
       order.orderNumber = (maxNum + 1).toString().padStart(3, "0");
     }
   }
-});
 
+});
 
 module.exports = Order;
