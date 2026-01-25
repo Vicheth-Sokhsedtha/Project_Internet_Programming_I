@@ -47,7 +47,7 @@
         <MainCategory
           :discountProducts="discountProducts"
           :dress="dress"
-          :tshirts="tshirt"
+          :shirt="shirt"
           :jacket="jacket"
           :cropTop="cropTop"
           :shorts="shorts"
@@ -210,12 +210,12 @@ const dress = computed(() => {
   return backendProducts.value.filter(p => p.category === 'Dresses').slice(0, 8);
 });
 
-const tshirt = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'T-Shirts&Shirts').slice(0, 8);
+const shirt = computed(() => {
+  return backendProducts.value.filter(p => p.category === 'Shirts_T-Shirts').slice(0, 8);
 });
 
 const jacket = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Jackets&Hoodies').slice(0, 8);
+  return backendProducts.value.filter(p => p.category === 'Jackets_Hoodies').slice(0, 8);
 });
 
 const cropTop = computed(() => {
@@ -231,7 +231,7 @@ const skirts = computed(() => {
 });
 
 const pants = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Jeans&Pants').slice(0, 8);
+  return backendProducts.value.filter(p => p.category === 'Jeans_Pants').slice(0, 8);
 });
 
 // --- Search state ---

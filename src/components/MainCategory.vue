@@ -49,73 +49,64 @@
   </div>
 
   <!-- Product Sections -->
-  <ProductSection
-    v-if="activeTab === 'Discount'"
-    title="Discount"
-    :items="discountProducts"
-  />
-  <ProductSection
-    v-else-if="activeTab"
-    :title="activeTab"
-    :items="filteredProducts"
-  />
+  <ProductSection v-if="activeTab === 'Discount'" title="Discount" :items="discountProducts" />
+  <ProductSection v-else-if="activeTab" :title="activeTab" :items="filteredProducts" />
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import ProductSection from "./ProductSection.vue";
+import { ref, computed, onMounted } from 'vue'
+import ProductSection from './ProductSection.vue'
 
 interface Product {
-  id: number;
-  name: string;
-  price: number;
-  oldPrice?: number;
-  image: string;
-  category?: string;
+  id: number
+  name: string
+  price: number
+  oldPrice?: number
+  image: string
+  category?: string
 }
 
-const backendProducts = ref<Product[]>([]);
-const activeTab = ref("");
+const backendProducts = ref<Product[]>([])
+const activeTab = ref('')
 
 const fetchProducts = async () => {
-  const response = await fetch("http://localhost:5000/api/products/");
-  backendProducts.value = await response.json();
-};
+  const response = await fetch('http://localhost:5000/api/products/')
+  backendProducts.value = await response.json()
+}
 
 const categoryImages: Record<string, string> = {
-  Dresses: "/image/dress.png",
-  Shirts: "/image/tshirt.png",
-  Jackets: "/image/jacket.png",
-  CropTop: "/image/croptop.png",
-  Shorts: "/image/shorts.png",
-  Skirts: "/image/skirts.png",
-};
+  Dresses: '/image/dresses/dress6.png',
+  'T-Shirts_Shirts': '/image/shirts_tshirts/shirt5.jpg',
+  'Jackets_Hoodies': '/image/jackets_hoodies/jacket1.png',
+  CropTop: '/image/croptops/croptop1.png',
+  Shorts: '/image/shorts/short1.png',
+  Skirts: '/image/skirts/skirt4.png',
+  'Jeans_Pants': '/image/pants_jeans/jeans1.jpg',
+}
 
 const tabs = computed(() => {
-  const categories = [...new Set(
-    backendProducts.value
-      .map(p => p.category)
-      .filter((c): c is string => !!c)
-  )];
-  return categories.map(c => ({
+  const categories = [
+    ...new Set(backendProducts.value.map((p) => p.category).filter((c): c is string => !!c)),
+  ]
+  return categories.map((c) => ({
     name: c,
-    image: categoryImages[c] || "/image/default.png"
-  }));
-});
+    image: categoryImages[c] || '/image/default.png',
+  }))
+})
 
 function handleCategorySelect(category: string) {
-  activeTab.value = category;
+  activeTab.value = category
 }
 
 const discountProducts = computed(() =>
-  backendProducts.value.filter(p => p.oldPrice && p.price < p.oldPrice)
-);
+  backendProducts.value.filter((p) => p.oldPrice && p.price < p.oldPrice),
+)
 
 const filteredProducts = computed(() =>
-  backendProducts.value.filter(p => p.category === activeTab.value)
-);
+  backendProducts.value.filter((p) => p.category === activeTab.value),
+)
 
-onMounted(fetchProducts);
+onMounted(fetchProducts)
 </script>
 
 <style scoped>

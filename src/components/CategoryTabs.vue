@@ -39,7 +39,7 @@
     />
     <ProductSection
       v-if="activeTab === 'Jacket'"
-      title="Jacket & Hoodie"
+      title="Jacket & Hoodie" 
       :items="props.jacket"
     />
     <ProductSection
@@ -56,6 +56,11 @@
       v-if="activeTab === 'Skirts'"
       title="Skirts"
       :items="props.skirts"
+    />
+    <ProductSection
+      v-if="activeTab === 'Pants'"
+      title="Pants&Jeans"
+      :items="props.pants"
     />
   </div>
 
@@ -74,11 +79,12 @@ interface Props {
   cropTop: any[];
   shorts: any[];
   skirts: any[];
+  pants: any[];
 }
 
 const props = defineProps<Props>();
 
-const tabs = ["All", "Dress", "T-shirts", "Shirts", "Jacket", "Shorts", "Skirts", "Crop Top"];
+const tabs = ["All", "Dress", "Crop Top", "Shirts&T-shirts", "Jackets&Hoodies", "Shorts", "Skirts", "Pants&Jeans"];
 const activeTab = ref("All");
 </script>
 

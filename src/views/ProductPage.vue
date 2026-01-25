@@ -38,7 +38,7 @@
           :cropTop="cropTop"
           :shorts="shorts"
           :skirts="skirts"
-          :jeans="pants"
+          :pants="pants"
           @selectCategory="handleCategorySelect"
         />
       </div>
@@ -60,126 +60,81 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
-import SearchBar from "../components/SearchBar.vue";
-import CategoryTabs from "../components/CategoryTabs.vue";
-import ProductSection from "../components/ProductSection.vue";
+import { ref, computed, onMounted } from 'vue'
+import SearchBar from '../components/SearchBar.vue'
+import CategoryTabs from '../components/CategoryTabs.vue'
+import ProductSection from '../components/ProductSection.vue'
 
 interface Product {
-  id: number;
-  name: string;
-  price: number;
-  oldPrice?: number;
-  image: string;
-  category?: string;
-  description?: string;
+  id: number
+  name: string
+  price: number
+  oldPrice?: number
+  image: string
+  category?: string
+  description?: string
 }
 
-// Reactive product data from backend
-const backendProducts = ref<Product[]>([]);
-const loading = ref(true);
-const error = ref("");
+// Backend products
+const backendProducts = ref<Product[]>([])
+const loading = ref(true)
+const error = ref('')
 
-// Fetch products from backend
+// Fetch products
 const fetchProducts = async () => {
   try {
-    loading.value = true;
-    const response = await fetch("http://localhost:5000/api/products/");
-    const data = await response.json();
-    backendProducts.value = data;
-    console.log("Products loaded:", data);
+    loading.value = true
+    const response = await fetch('http://localhost:5000/api/products/')
+    backendProducts.value = await response.json()
   } catch (err) {
-    error.value = "Failed to load products from server";
-    console.error(err);
+    error.value = 'Failed to load products from server'
+    console.error(err)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-// Organize products by category
-const discountProducts = computed(() => {
-  return backendProducts.value.filter(p => p.oldPrice && p.price < p.oldPrice).slice(0, 8);
-});
+// Discount: only 2 rows visible in ProductSection
+const discountProducts = computed(() =>
+  backendProducts.value.filter(p => p.oldPrice && p.price < p.oldPrice)
+);
 
-const dress = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Dresses').slice(0, 8);
-});
+const dress = computed(() => backendProducts.value.filter(p => p.category === "Dresses"));
+const shirt = computed(() => backendProducts.value.filter(p => p.category === "T-Shirts&Shirts"));
+const jacket = computed(() => backendProducts.value.filter(p => p.category === "Jackets&Hoodies"));
+const cropTop = computed(() => backendProducts.value.filter(p => p.category === "CropTop"));
+const shorts = computed(() => backendProducts.value.filter(p => p.category === "Shorts"));
+const skirts = computed(() => backendProducts.value.filter(p => p.category === "Skirts"));
+const pants = computed(() => backendProducts.value.filter(p => p.category === "Jeans&Pants"));
+const searchQuery = ref('')
 
-const shirt = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'T-Shirts&Shirts').slice(0, 8);
-});
-
-
-const jacket = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Jackets&Hoodies').slice(0, 8);
-});
-
-const cropTop = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'CropTop').slice(0, 8);
-});
-
-const shorts = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Shorts').slice(0, 8);
-});
-
-const skirts = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Skirts').slice(0, 8);
-});
-
-const pants = computed(() => {
-  return backendProducts.value.filter(p => p.category === 'Jeans&Pants').slice(0, 8);
-});
-
-// const pants = computed(() => {
-//   return backendProducts.value.filter(p => p.category === 'Pants').slice(0, 8);
-// });
-
-
-
-
-
-// --- Search state ---
-const searchQuery = ref("");
-
-// Handle search event
 function handleSearch(query: string) {
-  searchQuery.value = query;
+  searchQuery.value = query
 }
 
-// Handle category tab selection
 function handleCategorySelect(category: string) {
-  searchQuery.value = category;
+  searchQuery.value = category
 }
 
-// Combine ALL products for searching
-const allProducts = computed(() => {
-  return backendProducts.value;
-});
-
-// Filter products based on search query
 const filteredProducts = computed(() => {
-  if (!searchQuery.value) return [];
+  if (!searchQuery.value) return []
 
-  const query = searchQuery.value.toLowerCase();
+  const query = searchQuery.value.toLowerCase()
 
-  return allProducts.value.filter(product =>
-    product.name.toLowerCase().includes(query) ||
-    (product.category && product.category.toLowerCase().includes(query))
-  );
-});
+  return backendProducts.value.filter(
+    (product) =>
+      product.name.toLowerCase().includes(query) || product.category?.toLowerCase().includes(query),
+  )
+})
 
-// Load products on component mount
-onMounted(() => {
-  fetchProducts();
-});
+onMounted(fetchProducts)
 </script>
-
 
 <style scoped>
 .page {
   width: 100vw;
   min-height: 100vh;
-  background: #D9CFC7;
+  background: #d9cfc7;
   margin: 0;
   padding: 0;
   overflow-x: hidden;
@@ -200,7 +155,7 @@ onMounted(() => {
 }
 
 .hero-text h1 {
-  font-family: "Playfair Display", serif;
+  font-family: 'Playfair Display', serif;
   font-size: 64px;
   font-weight: 600;
   line-height: 1.05;
@@ -231,7 +186,7 @@ onMounted(() => {
   text-align: center;
   font-size: 48px;
   font-weight: 600;
-  font-family: "Playfair Display", serif;
+  font-family: 'Playfair Display', serif;
   color: #000000;
   margin: 2px 0 2px;
 }
@@ -240,7 +195,7 @@ onMounted(() => {
 .search-results-header {
   text-align: center;
   padding: 40px 20px 20px;
-  font-family: "Playfair Display", serif;
+  font-family: 'Playfair Display', serif;
   font-size: 28px;
   color: #333;
 }
@@ -248,7 +203,7 @@ onMounted(() => {
 .no-results {
   text-align: center;
   padding: 80px 40px;
-  font-family: "Playfair Display", serif;
+  font-family: 'Playfair Display', serif;
   font-size: 24px;
   color: #666;
 }

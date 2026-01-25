@@ -1,26 +1,28 @@
 <template>
   <div class="section">
-    <h2 class="title">{{ title }}</h2>
+    <h2 class="title" v-if="title">{{ title }}</h2>
 
-    <div class="grid" >
+    <div class="grid">
       <ProductCard
-        v-for="item in items"
+        v-for="item in displayedItems"
         :key="item.id"
-        :id="item.id"
-        :name="item.name"
-        :price="item.price"
-        :oldPrice="item.oldPrice"
-        :image="item.image"
+        v-bind="item"
       />
-
     </div>
 
-    <div class="more">see more →</div>
+    <div class="more" v-if="!showAll && items.length > limit">
+      <button class="see-more-btn" @click="showAll = true">
+        See more →
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import ProductCard from "../components/ProductCard.vue";
+
+import { ref, computed } from "vue";
+import ProductCard from "./ProductCard.vue";
+
 
 interface Product {
   id: number;
@@ -28,19 +30,25 @@ interface Product {
   price: number;
   oldPrice?: number;
   image: string;
+  category?: string;
 }
 
-defineProps<{
+const props = defineProps<{
   title: string;
   items: Product[];
 }>();
 
-</script>
+const limit = 8; // 2 rows
+const showAll = ref(false);
 
+const displayedItems = computed(() =>
+  showAll.value ? props.items : props.items.slice(0, limit)
+);
+</script>
 
 <style scoped>
 .section {
-  padding: 60px 0;               /* more breathing like Figma */
+  padding: 60px 0;
   margin-top: 40px;
 }
 
@@ -52,27 +60,30 @@ defineProps<{
   margin-bottom: 40px;
 }
 
-/* Perfect Figma 4-column grid */
 .grid {
   display: grid;
-  grid-template-columns: repeat(4, 281px); /* exact card width */
+  grid-template-columns: repeat(4, 281px);
   justify-content: center;
-  gap: 40px 32px; /* row-gap, column-gap */
+  gap: 40px 32px;
   padding: 0 120px;
 }
 
-
-/* “see more →” bottom right */
 .more {
   text-align: right;
-  padding-right: 120px;          /* align with grid */
+  padding-right: 120px;
   margin-top: 25px;
+}
+
+.see-more-btn {
+  background: none;
+  border: none;
   font-size: 16px;
   cursor: pointer;
   opacity: 0.8;
-}
-.more:hover {
-  opacity: 1;
+  transition: opacity 0.2s;
 }
 
+.see-more-btn:hover {
+  opacity: 1;
+}
 </style>
