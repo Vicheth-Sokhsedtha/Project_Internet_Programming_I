@@ -2,7 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const sequelize = require("./config/db");
 const seedData = require("./seeds/seedData");
-
+const path = require('path');
+const app = express();
 
 
 // Import models before syncing
@@ -11,20 +12,33 @@ const { User, Product, Order, Promotion } = require("./models");
 const app = express();
 app.use(cors());
 app.use(express.json());
-
-<<<<<<< Updated upstream
-
+app.use(express.urlencoded({ extended: true }));
 // Static folder for uploads
 const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-=======
-// Serve static files from uploads directory
-app.use("/uploads", express.static("uploads"));
-
->>>>>>> Stashed changes
 // test route
 app.get("/", (req, res) => {
   res.send("Women Clothes Backend is running");
+});
+
+// Add to your app.js or create a test route
+app.get('/test-uploads', (req, res) => {
+  const fs = require('fs');
+  const path = require('path');
+  
+  const uploadDir = path.join(__dirname, 'uploads');
+  
+  fs.readdir(uploadDir, (err, files) => {
+    if (err) {
+      return res.json({ error: 'Uploads directory not found', files: [] });
+    }
+    
+    res.json({ 
+      uploadsPath: uploadDir,
+      fileCount: files.length,
+      files: files.slice(0, 10) // Show first 10 files
+    });
+  });
 });
 
 // routes

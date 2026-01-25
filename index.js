@@ -36,10 +36,14 @@ app.use("/api/orders", orderRoutes);
 
 // Associations
 
-Order.belongsTo(User, { foreignKey: "userId", as: "User" });
-User.hasMany(Order, { foreignKey: "userId", as: "Orders" });
-Order.belongsTo(Product, { foreignKey: "productId", as: "Product" });
-Product.hasMany(Order, { foreignKey: "productId", as: "Orders" });
+// User ↔ Order
+Order.belongsTo(User, { foreignKey: "userId", as: "Customer" });
+User.hasMany(Order, { foreignKey: "userId", as: "CustomerOrders" });
+
+// Product ↔ Order
+Order.belongsTo(Product, { foreignKey: "productId", as: "OrderedProduct" });
+Product.hasMany(Order, { foreignKey: "productId", as: "ProductOrders" });
+
 
 // Simple test route
 app.get("/", (req, res) => {
@@ -49,12 +53,17 @@ app.get("/", (req, res) => {
 app.get("/api/orders", async (req, res) => {
   try {
     const orders = await Order.findAll({
-      include: [{ model: User, as: "User", attributes: ["username", "email"] }]
+      include: [
+        { model: User, as: "Customer", attributes: ["username", "email"] },
+        { model: Product, as: "OrderedProduct", attributes: ["name", "size", "price"] }
+      ]
     });
     res.json(orders);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch orders" }); } });
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
+});
 
 // Connect DB and start server
 sequelize.authenticate()

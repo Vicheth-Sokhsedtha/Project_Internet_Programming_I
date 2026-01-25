@@ -6,18 +6,24 @@ const { Order, User, Product, Promotion } = require("../models");
 
 
 // ============ ORDERS ============
-// GET all orders
+// In admin.routes.js orders GET route
 router.get("/orders", async (req, res) => {
   try {
     const orders = await Order.findAll({
-      include: [{ model: User, as: 'user' }, { model: Product, as: 'product' }]
+      include: [
+        { 
+          model: User, 
+          as: 'user',
+          attributes: ['id', 'username', 'email'] // Only include needed fields
+        }
+      ],
+      order: [["createdAt", "DESC"]]
     });
     res.json(orders);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch orders", details: err.message });
   }
 });
-
 // POST create order
 router.post("/orders", async (req, res) => {
   try {

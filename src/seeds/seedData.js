@@ -207,62 +207,157 @@ const seedData = async () => {
       { name: 'Brown Casual Pants', category: 'Jeans_Pants', price: 20.00, oldPrice: 25.00, image: '/image/pants_jeans/pants16.jpg', color: 'Gray', size: 'M', stock: 18, isActive:true },
     ]);
 
-    // Seed Orders with user and product relationships
-  await Order.bulkCreate([
-  {
-    orderNumber: "001",
-    userId: 1,
-    productId: products[0].id,
-    quantity: 1,
-    date: "2025-01-10",
-    total: 49.99,
-    status: "Completed",
-    paymentMethod: "Credit Card",
-    paymentProof: "/uploads/payment1.jpg",
-    deliveryAddress: "123 Main St, Cityville"
-  },
-  {
-    orderNumber: "002",
-    userId: 2,
-    productId: products[1].id,
-    quantity: 1,
-    date: "2025-01-12",
-    total: 129.99,
-    status: "Pending",
-    paymentMethod: "Bank Transfer",
-    paymentProof: "/uploads/payment2.jpg",
-    deliveryAddress: "456 Market Ave, Townsville"
-  },
-  {
-    orderNumber: "003",
-    userId: 1,
-    productId: products[2].id,
-    quantity: 2,
-    date: "2025-01-14",
-    total: 39.98,
-    status: "Completed",
-    paymentMethod: "PayPal",
-    paymentProof: "/uploads/payment3.jpg",
-    deliveryAddress: "789 Broadway, Cityville"
-  }
-]);
-
-
-
-    // order
-    // await Order.create({
-    //     orderNumber: "001",
-    //     userId: 1,
-    //     productId: 1,
-    //     quantity: 1,
-    //     location: "123 Main St, Cityville",
-    //     total: 49.99,
-    //     status: "Completed",
-    //     paymentMethod: "Credit Card",
-    //     paymentProof: "/uploads/payment1.jpg"
-    // });
-
-
+  // Seed Orders with MULTIPLE products in each order
+    await Order.bulkCreate([
+      {
+        orderNumber: "001",
+        userId: 1, // Alice's order
+        items: [
+          {
+            productId: products[0].id,
+            productName: products[0].name,
+            size: products[0].size,
+            quantity: 2,
+            price: products[0].price,
+            image: products[0].image
+          },
+          {
+            productId: products[1].id,
+            productName: products[1].name,
+            size: products[1].size,
+            quantity: 1,
+            price: products[1].price,
+            image: products[1].image
+          },
+          {
+            productId: products[2].id,
+            productName: products[2].name,
+            size: products[2].size,
+            quantity: 3,
+            price: products[2].price,
+            image: products[2].image
+          }
+        ],
+        date: "2025-01-10",
+        total: (15.00 * 2) + (10.00 * 1) + (25.00 * 3), // 30 + 10 + 75 = 115
+        status: "Completed",
+        paymentMethod: "QR Code",
+        paymentProof: "payment_receipt_001.jpg",
+        deliveryAddress: "123 Main St, Cityville, Country",
+        contactNumber: "+1234567890",
+        email: "alice@example.com",
+        userLocation: "123 Main St, Cityville"
+      },
+      {
+        orderNumber: "002",
+        userId: 2, // Bob's order
+        items: [
+          {
+            productId: products[3].id,
+            productName: products[3].name,
+            size: products[3].size,
+            quantity: 1,
+            price: products[3].price,
+            image: products[3].image
+          },
+          {
+            productId: products[4].id,
+            productName: products[4].name,
+            size: products[4].size,
+            quantity: 2,
+            price: products[4].price,
+            image: products[4].image
+          }
+        ],
+        date: "2025-01-12",
+        total: (20.00 * 1) + (15.00 * 2), // 20 + 30 = 50
+        status: "Pending",
+        paymentMethod: "Bank Transfer",
+        paymentProof: "/uploads/payment3.png",
+        deliveryAddress: "456 Market Ave, Townsville, Country",
+        contactNumber: "+9876543210",
+        email: "bob@example.com",
+        userLocation: "456 Market Ave, Townsville"
+      },
+      {
+        orderNumber: "003",
+        userId: 1, // Alice's second order
+        items: [
+          {
+            productId: products[5].id,
+            productName: products[5].name,
+            size: products[5].size,
+            quantity: 1,
+            price: products[5].price,
+            image: products[5].image
+          },
+          {
+            productId: products[6].id,
+            productName: products[6].name,
+            size: products[6].size,
+            quantity: 1,
+            price: products[6].price,
+            image: products[6].image
+          },
+          {
+            productId: products[7].id,
+            productName: products[7].name,
+            size: products[7].size,
+            quantity: 2,
+            price: products[7].price,
+            image: products[7].image
+          },
+          {
+            productId: products[8].id,
+            productName: products[8].name,
+            size: products[8].size,
+            quantity: 1,
+            price: products[8].price,
+            image: products[8].image
+          }
+        ],
+        date: "2025-01-15",
+        total: (10.00 * 1) + (25.00 * 1) + (15.00 * 2) + (19.00 * 1), // 10 + 25 + 30 + 19 = 84
+        status: "Completed",
+        paymentMethod: "QR Code",
+        paymentProof: "/uploads/payment3.png",
+        deliveryAddress: "789 Broadway, Cityville, Country",
+        contactNumber: "+1234567890",
+        email: "alice@example.com",
+        userLocation: "789 Broadway, Cityville"
+      },
+      {
+        orderNumber: "004",
+        userId: 3, // Charlie's order (admin)
+        items: [
+          {
+            productId: products[9].id,
+            productName: products[9].name,
+            size: products[9].size,
+            quantity: 3,
+            price: products[9].price,
+            image: products[9].image
+          },
+          {
+            productId: products[10].id,
+            productName: products[10].name,
+            size: products[10].size,
+            quantity: 2,
+            price: products[10].price,
+            image: products[10].image
+          }
+        ],
+        date: "2025-01-18",
+        total: (18.00 * 3) + (22.00 * 2), // 54 + 44 = 98
+        status: "Pending",
+        paymentMethod: "Credit Card",
+        paymentProof: "/uploads/payment3.png",
+        deliveryAddress: "321 Oak St, Villagetown, Country",
+        contactNumber: "+1122334455",
+        email: "charlie@example.com",
+        userLocation: "321 Oak St, Villagetown"
+      }
+    ]);
 
     // Seed Promotions
     await Promotion.bulkCreate([
@@ -283,13 +378,25 @@ const seedData = async () => {
         discount: 15,
         expiry: '2025-01-10',
         active: false
+      },
+      {
+        code: 'MULTI25',
+        discount: 25,
+        expiry: '2025-03-15',
+        active: true
       }
     ]);
 
     console.log('✅ Database seeded successfully!');
+    console.log(`   Created: ${await User.count()} users`);
+    console.log(`   Created: ${await Product.count()} products`);
+    console.log(`   Created: ${await Order.count()} orders`);
+    console.log(`   Created: ${await Promotion.count()} promotions`);
+    
   } catch (error) {
     console.error('❌ Error seeding database:', error);
   }
 };
 
 module.exports = seedData;
+
