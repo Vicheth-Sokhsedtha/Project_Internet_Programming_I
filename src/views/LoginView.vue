@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useUserStore } from "../stores/user";
 
 const router = useRouter();
+const userStore = useUserStore();
 
 const loginData = ref({
   username: "",
@@ -14,7 +16,7 @@ const submitted = ref(false);
 const passwordVisible = ref(false);
 
 const isFormValid = computed(() => {
-  return loginData.value.email.trim() !== "" && loginData.value.password.trim() !== "";
+  return (loginData.value.username.trim() !== "" || loginData.value.email.trim() !== "") && loginData.value.password.trim() !== "";
 });
 
 const handleLogin = async () => {
@@ -22,40 +24,42 @@ const handleLogin = async () => {
   if (!isFormValid.value) return;
 
   try {
-    const response = await fetch("http://localhost:5000/api/users/login", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    email: loginData.value.email,
-    password: loginData.value.password
-  })
-});
-
+      const response = await fetch("http://localhost:5000/api/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username: loginData.value.username || undefined,
+        email: loginData.value.email || undefined,
+        password: loginData.value.password
+      }),
+    });
 
     const result = await response.json();
+    console.log("LOGIN RESPONSE:", result);
 
-    if (response.ok) {
-      // Store token and user ID in localStorage
-      if (result.token) {
-        localStorage.setItem("authToken", result.token);
-      }
-      if (result.id) {
-        localStorage.setItem("userId", result.id);
-      }
-
-      if (result.role === "admin") {
-        router.push("/adminDashboard");
-      } else {
-        router.push("/home");
-      }
-    } else {
+    if (!response.ok) {
       alert(result.error || "Invalid credentials!");
+      return;
+    }
+
+    // ✅ FIX
+    userStore.setToken(result.token);
+    userStore.setUser(result.user);
+    localStorage.setItem("userId", result.user.id);
+    localStorage.setItem("userRole", result.user.role);
+
+    // ✅ REDIRECT
+   if (result.user.role === "admin") {
+      router.push("/adminDashboard");
+    } else {
+      router.push("/user/dashboard");
     }
   } catch (err) {
     console.error(err);
     alert("Server error, please try again later.");
   }
 };
+
 
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value;

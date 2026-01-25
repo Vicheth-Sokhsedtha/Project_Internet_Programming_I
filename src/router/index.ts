@@ -90,9 +90,10 @@ const routes = [
   ]
 },
 {
-  path: '/adminDashboard',
-  name: 'adminDashboard',
-  component: AdminDashboard
+  path: "/adminDashboard",
+  name: "adminDashboard",
+  component: AdminDashboard,
+  meta: { requiresAuth: true, requiresAdmin: true }
 },
 {
   path: '/user/dashboard',
@@ -138,18 +139,24 @@ const router = createRouter({
 })
 
 router.beforeEach((to, from, next) => {
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
-  console.log('[router] to:', to.name, 'user:', user)
-  if (to.meta?.requiresAuth && !user) {
-    console.log('[router] requiresAuth -> redirect to login')
-    return next({ name: 'login' })
-  }
-  if (to.meta?.requiresAdmin && user?.role !== 'admin') {
-    console.log('[router] requiresAdmin but not admin -> redirect home')
-    return next({ name: 'home' })
-  }
-  next()
-})
+  const userId = localStorage.getItem("userId");
+  const userRole = localStorage.getItem("userRole");
 
+  console.log("[router] to:", to.name, "userId:", userId, "role:", userRole);
+
+  // 🔐 Requires login
+  if (to.meta.requiresAuth && !userId) {
+    console.log("[router] requiresAuth → redirect to login");
+    return next({ name: "login" });
+  }
+
+  // 🔐 Requires admin
+  if (to.meta.requiresAdmin && userRole !== "admin") {
+    console.log("[router] requiresAdmin but not admin → redirect home");
+    return next({ name: "home" });
+  }
+
+  next();
+});
 
 export default router;

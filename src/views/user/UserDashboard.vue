@@ -16,20 +16,23 @@
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <label class="avatar-wrapper">
-    <img
-      class="avatar"
-        :src="userData.avatar || '/image/picUser.png'"
-        alt="User Avatar"
-    />
+    <!-- Alternative: Direct interpolation -->
+  <!-- filepath: d:\I4 courses\Internet Programming I\Project\Main\Project_Internet_Programming_I\src\views\user\UserDashboard.vue -->
+  <img
+    class="avatar"
+    :src="avatarUrl"
+    :key="avatarUrl"
+    alt="User Avatar"
+  />
     <input
       type="file"
       accept="image/*"
-      hidden
       @change="handleAvatarChange"
-  />
+      style="display: none;"
+    />
 </label>
 
-        <h3 class="username">{{ userData.username }}</h3>
+        <h3 class="username">{{ userStore.user.username }}</h3>
 
         <nav>
           <button
@@ -71,69 +74,104 @@
 
           <div class="field">
             <label>Username</label>
-            <input v-model="userData.username" type="text" placeholder="Username" disabled />
+            <input v-model="userStore.user.username" type="text" placeholder="Username" disabled />
           </div>
 
           <div class="field">
             <label>Email</label>
-            <input v-model="userData.email" type="email" placeholder="Email" disabled />
+            <input v-model="userStore.user.email" type="email" placeholder="Email" disabled />
           </div>
 
           <!-- Editable fields -->
-          <div class="section-title">Personal Information (Editable)</div>
+          <div class="section-title">Personal Information</div>
 
           <div class="field">
             <label>Phone Number</label>
-            <input v-model="userData.phone" type="text" placeholder="Phone" />
+            <input v-model="userStore.user.phone" type="text" placeholder="Phone" />
           </div>
 
           <div class="field">
             <label>Address</label>
-            <input v-model="userData.address" type="text" placeholder="Address" />
+            <input v-model="userStore.user.address" type="text" placeholder="Address" />
           </div>
 
           <div class="field">
             <label>City</label>
-            <input v-model="userData.city" type="text" placeholder="City" />
+            <input v-model="userStore.user.city" type="text" placeholder="City" />
           </div>
 
           <div class="field">
             <label>Postal Code</label>
-            <input v-model="userData.postalCode" type="text" placeholder="Postal Code" />
+            <input v-model="userStore.user.postalCode" type="text" placeholder="Postal Code" />
           </div>
 
           <div class="field">
             <label>Country</label>
-            <input v-model="userData.country" type="text" placeholder="Country" />
+            <input v-model="userStore.user.country" type="text" placeholder="Country" />
           </div>
 
-          <button class="confirm" @click="updateProfile" :disabled="updating">
-            {{ updating ? 'Updating...' : 'Save Changes' }}
+          <button type="button" @click="updateProfile" :disabled="updating" class="btn-primary">
+            {{ updating ? "Updating..." : "Update Profile" }}
           </button>
+
+          <!-- SUCCESS MESSAGE -->
+          <div v-if="successMessage" class="success-message">
+            {{ successMessage }}
+          </div>
+
+          <!-- ERROR MESSAGE -->
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
         </section>
 
         <!-- CHANGE PASSWORD -->
         <section v-else-if="currentTab === 'password'" class="card">
           <h2>Change Password</h2>
 
-          <div class="field">
-            <label>Current Password</label>
-            <input v-model="passwordData.currentPassword" type="password" placeholder="Enter current password" />
-          </div>
+          <form @submit.prevent="changePassword" class="password-form">
+            <div class="field">
+              <label for="currentPassword">Current Password</label>
+              <input
+                id="currentPassword"
+                v-model="passwordData.currentPassword"
+                type="password"
+                placeholder="Enter current password"
+                required
+              />
+            </div>
 
-          <div class="field">
-            <label>New Password</label>
-            <input v-model="passwordData.newPassword" type="password" placeholder="Enter new password" />
-          </div>
+            <div class="field">
+              <label for="newPassword">New Password</label>
+              <input
+                id="newPassword"
+                v-model="passwordData.newPassword"
+                type="password"
+                placeholder="Enter new password"
+                required
+              />
+            </div>
 
-          <div class="field">
-            <label>Confirm Password</label>
-            <input v-model="passwordData.confirmPassword" type="password" placeholder="Confirm new password" />
-          </div>
+            <div class="field">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input
+                id="confirmPassword"
+                v-model="passwordData.confirmPassword"
+                type="password"
+                placeholder="Confirm new password"
+                required
+              />
+            </div>
 
-          <button class="confirm" @click="changePassword" :disabled="updating">
-            {{ updating ? 'Updating...' : 'Change Password' }}
-          </button>
+            <button type="submit" :disabled="updating" class="btn-primary">
+              {{ updating ? "Updating..." : "Change Password" }}
+            </button>
+          </form>
+
+          <!-- ERROR MESSAGE -->
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
         </section>
 
         <!-- MY ORDERS -->
@@ -157,83 +195,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useUserStore } from "../../stores/user";
 
 const router = useRouter();
+const userStore = useUserStore();
 const currentTab = ref<"profile" | "password" | "orders">("profile");
 const loading = ref(true);
 const updating = ref(false);
 const error = ref("");
 const successMessage = ref("");
-
-const handleAvatarChange = async (event: Event) => {
-  const file = (event.target as HTMLInputElement)?.files?.[0];
-  if (!file) return;
-
-  const userId = getUserId();
-  const token = getAuthToken();
-
-  if (!userId) {
-    error.value = "Please login again.";
-    redirectToLogin();
-    return;
-  }
-
-  // preview (temporary)
-  const previewUrl = URL.createObjectURL(file);
-  userData.value.avatar = previewUrl;
-
-  const formData = new FormData();
-  formData.append("avatar", file);
-
-  try {
-    const response = await fetch(`http://localhost:5000/api/users/${userId}/avatar`, {
-      method: "POST",
-      headers: {
-        ...(token && { Authorization: `Bearer ${token}` }),
-      },
-      body: formData,
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.error || "Upload failed");
-    }
-
-    console.log("Upload result:", result);
-
-    // update avatar URL
-    userData.value.avatar = result.avatarUrl;
-
-    successMessage.value = "Profile image updated!";
-    setTimeout(() => (successMessage.value = ""), 3000);
-  } catch (err) {
-    console.error(err);
-    error.value = err instanceof Error ? err.message : "Failed to upload image";
-  } finally {
-    // cleanup preview
-    URL.revokeObjectURL(previewUrl);
-
-    // reset input so user can re-upload same file again
-    (event.target as HTMLInputElement).value = "";
-  }
-};
-
-
-
-const userData = ref({
-  id: null,
-  username: "",
-  email: "",
-  phone: "",
-  address: "",
-  city: "",
-  postalCode: "",
-  country: "",
-  avatar: "",
-});
 
 const passwordData = ref({
   currentPassword: "",
@@ -242,6 +214,78 @@ const passwordData = ref({
 });
 
 const orders = ref<any[]>([]);
+
+// Computed property for avatar URL
+const avatarUrl = computed(() => {
+  console.log('userStore.user.avatar:', userStore.user.avatar);
+  if (userStore.user.avatar) {
+    const url = `http://localhost:5000/${userStore.user.avatar}?t=${Date.now()}`;
+    console.log('Avatar URL:', url);
+    return url;
+  }
+  console.log('Using default avatar');
+  // Use a reliable placeholder
+  return 'https://via.placeholder.com/100x100/ccc/000?text=No+Image';
+});
+
+const handleAvatarChange = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+
+  if (!file) return;
+
+  // Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+  if (!allowedTypes.includes(file.type)) {
+    error.value = "Please select a valid image file (JPEG, PNG, or GIF)";
+    return;
+  }
+
+  // Validate file size (5MB limit)
+  if (file.size > 5 * 1024 * 1024) {
+    error.value = "File size must be less than 5MB";
+    return;
+  }
+
+  updating.value = true;
+  error.value = "";
+  successMessage.value = "";
+
+  try {
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const token = userStore.token;
+    const response = await fetch("http://localhost:5000/api/users/avatar", {
+      method: "POST",
+      headers: {
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: formData,
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      successMessage.value = "Avatar uploaded successfully!";
+      // Update the user store with the response data
+      if (data.user) {
+        userStore.setUser(data.user);
+      }
+    } else {
+      const errorData = await response.json();
+      error.value = errorData.error || "Failed to upload avatar";
+    }
+  } catch (err) {
+    error.value = "Failed to upload avatar. Please try again.";
+    console.error("Avatar upload error:", err);
+  } finally {
+    updating.value = false;
+  }
+};
+
+
+
+
 
 // Get auth token
 const getAuthToken = (): string | null => {
@@ -254,71 +298,14 @@ const getUserId = (): string | null => {
   return localStorage.getItem("userId");
 };
 
-// Fetch user data from backend
-const fetchUserData = async () => {
-  try {
-    loading.value = true;
-    error.value = "";
-    const userId = getUserId();
-    const token = getAuthToken();
-
-    if (!userId) {
-      error.value = "User ID not found. Please log in again.";
-      setTimeout(redirectToLogin, 2000);
-      return;
-    }
-
-    const response = await fetch(
-      `http://localhost:5000/api/users/${userId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      }
-    );
-
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 404) {
-        error.value = "Session expired. Please log in again.";
-        setTimeout(redirectToLogin, 2000);
-        return;
-      }
-      throw new Error("Failed to fetch user data");
-    }
-
-    const data = await response.json();
-    userData.value = {
-      id: data.id,
-      username: data.username || "",
-      email: data.email || "",
-      phone: data.phone || "",
-      address: data.address || "",
-      city: data.city || "",
-      postalCode: data.postalCode || "",
-      country: data.country || "",
-      avatar: data.avatar || "",
-    };
-
-    // Fetch orders for this user
-    await fetchUserOrders();
-  } catch (err) {
-    console.error("Error fetching user data:", err);
-    error.value = "Failed to load profile. Please try again.";
-  } finally {
-    loading.value = false;
-  }
-};
-
 // Fetch user orders
 const fetchUserOrders = async () => {
   try {
-    const userId = getUserId();
-    const token = getAuthToken();
+    const userId = userStore.user.id;
+    const token = userStore.token;
 
     const response = await fetch(
-      `http://localhost:5000/api/orders/user/${userId}`,
+      `http://localhost:5000/api/products/orders/user/${userId}`,
       {
         method: "GET",
         headers: {
@@ -338,43 +325,41 @@ const fetchUserOrders = async () => {
 
 // Update profile
 const updateProfile = async () => {
+  updating.value = true;
+  error.value = "";
+  successMessage.value = "";
+
   try {
-    updating.value = true;
-    error.value = "";
-    successMessage.value = "";
+    const token = userStore.token;
+    const response = await fetch("http://localhost:5000/api/users/profile", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify({
+        phone: userStore.user.phone,
+        address: userStore.user.address,
+        city: userStore.user.city,
+        postalCode: userStore.user.postalCode,
+        country: userStore.user.country,
+      }),
+    });
 
-    const userId = getUserId();
-    const token = getAuthToken();
-
-    const response = await fetch(
-      `http://localhost:5000/api/users/${userId}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({
-          phone: userData.value.phone,
-          address: userData.value.address,
-          city: userData.value.city,
-          postalCode: userData.value.postalCode,
-          country: userData.value.country,
-        }),
+    if (response.ok) {
+      const data = await response.json();
+      successMessage.value = "Profile updated successfully!";
+      // Update the user store with the response data
+      if (data.user) {
+        userStore.setUser(data.user);
       }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to update profile");
+    } else {
+      const errorData = await response.json();
+      error.value = errorData.error || "Failed to update profile";
     }
-
-    successMessage.value = "Profile updated successfully!";
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
   } catch (err) {
-    console.error("Error updating profile:", err);
     error.value = "Failed to update profile. Please try again.";
+    console.error("Profile update error:", err);
   } finally {
     updating.value = false;
   }
@@ -382,57 +367,50 @@ const updateProfile = async () => {
 
 // Change password
 const changePassword = async () => {
+  if (passwordData.value.newPassword !== passwordData.value.confirmPassword) {
+    error.value = "New passwords do not match";
+    return;
+  }
+
+  if (passwordData.value.newPassword.length < 6) {
+    error.value = "New password must be at least 6 characters long";
+    return;
+  }
+
+  updating.value = true;
+  error.value = "";
+  successMessage.value = "";
+
   try {
-    if (!passwordData.value.currentPassword || !passwordData.value.newPassword) {
-      error.value = "All password fields are required.";
-      return;
-    }
+    const token = userStore.token;
+    const response = await fetch("http://localhost:5000/api/users/change-password", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token && { Authorization: `Bearer ${token}` }),
+      },
+      body: JSON.stringify({
+        currentPassword: passwordData.value.currentPassword,
+        newPassword: passwordData.value.newPassword,
+      }),
+    });
 
-    if (passwordData.value.newPassword !== passwordData.value.confirmPassword) {
-      error.value = "New password and confirm password do not match.";
-      return;
-    }
-
-    updating.value = true;
-    error.value = "";
-    successMessage.value = "";
-
-    const userId = getUserId();
-    const token = getAuthToken();
-
-    const response = await fetch(
-      `http://localhost:5000/api/users/${userId}/change-password`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: JSON.stringify({
-          currentPassword: passwordData.value.currentPassword,
-          newPassword: passwordData.value.newPassword,
-        }),
-      }
-    );
-
-    if (!response.ok) {
+    if (response.ok) {
       const data = await response.json();
-      throw new Error(data.error || "Failed to change password");
+      successMessage.value = "Password changed successfully!";
+      // Clear the form
+      passwordData.value = {
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      };
+    } else {
+      const errorData = await response.json();
+      error.value = errorData.error || "Failed to change password";
     }
-
-    successMessage.value = "Password changed successfully!";
-    passwordData.value = {
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    };
-
-    setTimeout(() => {
-      successMessage.value = "";
-    }, 3000);
   } catch (err) {
-    console.error("Error changing password:", err);
-    error.value = err instanceof Error ? err.message : "Failed to change password.";
+    error.value = "Failed to change password. Please try again.";
+    console.error("Password change error:", err);
   } finally {
     updating.value = false;
   }
@@ -449,8 +427,7 @@ const formatDate = (date: string): string => {
 
 // Logout
 function logout() {
-  localStorage.removeItem("authToken");
-  localStorage.removeItem("userId");
+  userStore.logout();
   router.push("/login");
 }
 
@@ -460,27 +437,45 @@ const redirectToLogin = () => {
 };
 
 // Load data on mount
-onMounted(() => {
-  fetchUserData();
+onMounted(async () => {
+  await userStore.fetchUserData();
+  await fetchUserOrders();
+  loading.value = false;
 });
 </script>
 
 <style scoped>
 .avatar-wrapper {
-  cursor: pointer;
   position: relative;
+  cursor: pointer;
+  display: inline-block;
+  border-radius: 50%;
+  transition: opacity 0.3s ease;
+}
+
+.avatar-wrapper:hover {
+  opacity: 0.8;
 }
 
 .avatar-wrapper::after {
-  content: "Change";
+  content: "Click to change avatar";
   position: absolute;
-  bottom: 0;
-  right: 0;
-  background: rgba(0,0,0,0.6);
+  bottom: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
   color: white;
-  font-size: 10px;
-  padding: 4px 6px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.avatar-wrapper:hover::after {
+  opacity: 1;
 }
 
 /* PAGE */

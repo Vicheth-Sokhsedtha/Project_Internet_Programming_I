@@ -49,12 +49,12 @@
 
       <ProductSection title="" :items="discountProducts" />
       <ProductSection title="Dress" :items="dress" />
-      <ProductSection title="Shirts&T-Shirts" :items="shirt" />
-      <ProductSection title="Jackets&Hoodies" :items="jacket" />
+      <ProductSection title="Shirts_T-shirts" :items="shirt" />
+      <ProductSection title="Jackets_Hoodies" :items="jacket" />
       <ProductSection title="Crop Top" :items="cropTop" />
       <ProductSection title="Shorts" :items="shorts" />
       <ProductSection title="Skirts" :items="skirts" />
-      <ProductSection title="Jeans&Pants" :items="pants" />
+      <ProductSection title="Jeans_Pants" :items="pants" />
     </div>
   </div>
 </template>
@@ -100,12 +100,12 @@ const discountProducts = computed(() =>
 );
 
 const dress = computed(() => backendProducts.value.filter(p => p.category === "Dresses"));
-const shirt = computed(() => backendProducts.value.filter(p => p.category === "T-Shirts&Shirts"));
-const jacket = computed(() => backendProducts.value.filter(p => p.category === "Jackets&Hoodies"));
+const shirt = computed(() => backendProducts.value.filter(p => p.category === "T-Shirts_Shirts"));
+const jacket = computed(() => backendProducts.value.filter(p => p.category === "Jackets_Hoodies"));
 const cropTop = computed(() => backendProducts.value.filter(p => p.category === "CropTop"));
 const shorts = computed(() => backendProducts.value.filter(p => p.category === "Shorts"));
 const skirts = computed(() => backendProducts.value.filter(p => p.category === "Skirts"));
-const pants = computed(() => backendProducts.value.filter(p => p.category === "Jeans&Pants"));
+const pants = computed(() => backendProducts.value.filter(p => p.category === "Jeans_Pants"));
 const searchQuery = ref('')
 
 function handleSearch(query: string) {

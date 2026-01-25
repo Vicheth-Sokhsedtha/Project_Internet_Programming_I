@@ -64,10 +64,12 @@
             <button class="login-btn">Login</button>
           </router-link>
           <!-- User profile - shown after login -->
-          <router-link v-if="isUserLoggedIn" to="/user/dashboard" class="user-icon" title="My Dashboard">
-            👤
-          </router-link>
-
+          <div v-if="isUserLoggedIn" class="user-info">
+            <span class="welcome-text">Welcome, {{ userName }}</span>
+            <router-link to="/user/dashboard" class="user-icon" title="My Dashboard">
+              👤
+            </router-link>
+          </div>
         </div>
 
         <!-- Mobile Menu Toggle -->
@@ -128,6 +130,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useCartStore } from '../stores/cart';
+import { useUserStore } from '../stores/user';
 
 // Props
 const props = defineProps({
@@ -142,18 +145,22 @@ const emit = defineEmits(['login', 'logout']);
 
 // State
 const mobileMenuOpen = ref(false);
-const isUserLoggedIn = ref(false);
 
 // Cart store
 const cartStore = useCartStore();
+const userStore = useUserStore();
 
 // Computed
 const cartItemCount = computed(() => cartStore.itemCount);
+const isUserLoggedIn = computed(() => userStore.isLoggedIn);
+const userName = computed(() => userStore.user.username);
 
 // Check login status from localStorage
-const checkLoginStatus = () => {
+const checkLoginStatus = async () => {
   const token = localStorage.getItem("authToken");
-  isUserLoggedIn.value = !!token;
+  if (token) {
+    await userStore.fetchUserData();
+  }
 };
 
 // Methods
@@ -167,6 +174,7 @@ const closeMobileMenu = () => {
 
 const handleAuthClick = () => {
   if (isUserLoggedIn.value) {
+    userStore.logout();
     emit('logout');
   } else {
     emit('login');
@@ -441,9 +449,15 @@ onMounted(() => {
   background: #2e2d2d;
 }
 
-.not-login-text {
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.welcome-text {
   font-size: 0.9rem;
-  color: #999;
+  color: #333;
   font-weight: 500;
   white-space: nowrap;
 }

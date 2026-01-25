@@ -128,6 +128,7 @@ export default defineComponent({
     const locationFile = ref<File | null>(null);
     const isProcessing = ref(false);
 
+
     const storedLocation = ref("");
     const contactNumber = ref("");
     const email = ref("");
@@ -306,6 +307,7 @@ export default defineComponent({
   font-size: 13px;
   color: #666;
 }
+
 
 .cart-item {
   display: flex;
