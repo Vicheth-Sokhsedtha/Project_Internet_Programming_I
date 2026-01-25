@@ -1,13 +1,13 @@
 const { User, Product, Order, Promotion } = require('../models');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 
 const seedData = async () => {
   try {
     // Clear existing data
-    // await User.destroy({ where: {} });
-    // await Product.destroy({ where: {} });
-    // await Order.destroy({ where: {} });
-    // await Promotion.destroy({ where: {} });
+    await Order.destroy({ where: {} });
+    await Promotion.destroy({ where: {} });
+    await Product.destroy({ where: {} });
+    await User.destroy({ where: {} });
 
     // Hash passwords
     const hashedPassword1 = await bcrypt.hash('password123', 10);
@@ -17,7 +17,6 @@ const seedData = async () => {
     // Seed Users
     await User.bulkCreate([
       {
-        id: 1,
         username: 'alice',
         email: 'alice@example.com',
         password: hashedPassword1,

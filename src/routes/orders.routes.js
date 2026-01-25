@@ -5,6 +5,7 @@ const path = require("path");
 const Order = require("../models/Order");
 const sequelize = require("../config/db"); // ✅ import sequelize
 
+const crypto = require('crypto');
 // Setup multer for file uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -46,7 +47,7 @@ router.post("/", upload.fields([
 
     // Create one order per item
     const createdOrders = await Promise.all(parsedItems.map((item, index) => {
-      const orderNumber = (maxNum + index + 1).toString().padStart(3, "0");
+      const orderNumber = crypto.randomUUID();
 
       return Order.create({
         orderNumber, // ✅ required field

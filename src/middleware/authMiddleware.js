@@ -1,4 +1,4 @@
-const { verifyToken } = require("./src/utils/jwt");
+const { verifyToken } = require("../utils/jwt");
 
 function adminOnly(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1];
@@ -13,4 +13,17 @@ function adminOnly(req, res, next) {
   next();
 }
 
-module.exports = adminOnly;
+function authenticateUser(req, res, next) {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "No token provided" });
+
+  const decoded = verifyToken(token);
+  if (!decoded) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+
+  req.user = decoded;
+  next();
+}
+
+module.exports = { adminOnly, authenticateUser };

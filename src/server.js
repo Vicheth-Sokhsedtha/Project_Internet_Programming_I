@@ -12,10 +12,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+<<<<<<< Updated upstream
 
 // Static folder for uploads
 const path = require("path");
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+=======
+// Serve static files from uploads directory
+app.use("/uploads", express.static("uploads"));
+
+>>>>>>> Stashed changes
 // test route
 app.get("/", (req, res) => {
   res.send("Women Clothes Backend is running");
@@ -24,6 +30,7 @@ app.get("/", (req, res) => {
 // routes
 app.use("/api/products", require("./routes/product.routes"));
 app.use("/api/admin", require("./routes/admin.routes"));
+app.use("/api/users", require("./routes/user.routes"));
 
 sequelize.authenticate()
   .then(() => {

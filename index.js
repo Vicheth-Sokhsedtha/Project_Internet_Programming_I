@@ -36,8 +36,11 @@ app.use("/api/orders", orderRoutes);
 
 // Associations
 
+Order.belongsTo(User, { foreignKey: "userId", as: "User" });
+User.hasMany(Order, { foreignKey: "userId", as: "Orders" });
 Order.belongsTo(Product, { foreignKey: "productId", as: "Product" });
 Product.hasMany(Order, { foreignKey: "productId", as: "Orders" });
+
 // Simple test route
 app.get("/", (req, res) => {
   res.send("Backend server is running 🚀");
