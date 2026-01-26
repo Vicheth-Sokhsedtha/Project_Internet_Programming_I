@@ -1,5 +1,5 @@
 const express = require("express");
-const bcrypt = require("bcryptjs");   // or 'bcryptjs'
+const bcrypt = require("bcryptjs");
 const { Op } = require("sequelize");
 const User = require("../models/user");
 const { authenticateUser } = require("../middleware/authMiddleware");
@@ -18,6 +18,8 @@ const storage = multer.diskStorage({
   }
 });
 
+console.log("authenticateUser middleware:", authenticateUser); // Keep this for debugging
+
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
@@ -34,29 +36,29 @@ const upload = multer({
   }
 });
 
+// Import jwt utils
+const { generateToken } = require("../utils/jwt");
+
 // Register user
 router.post("/signup", async (req, res) => {
   const { username, email, password } = req.body;
-  console.log("Signup attempt:", { username, email }); // Add this for debugging
+  console.log("Signup attempt:", { username, email });
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await User.create({ username, email, password: hashedPassword });
     res.json({ message: "User signed up successfully", user: newUser });
   } catch (err) {
-    console.error("Signup error:", err); // Add this
+    console.error("Signup error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Login user
-const { generateToken } = require("../utils/jwt");
-
+// In your login route in user.routes.js
 router.post("/login", async (req, res) => {
-  console.log("Received body:", req.body);
+  console.log("Login request body:", req.body);
 
   const { email, username, password } = req.body;
   try {
-    // Build conditions for finding user by email or username
     const conditions = [];
     if (email) conditions.push({ email });
     if (username) conditions.push({ username });
@@ -66,46 +68,52 @@ router.post("/login", async (req, res) => {
     }
 
     const user = await User.findOne({
-      where: {
-        [Op.or]: conditions
-      }
+      where: { [Op.or]: conditions }
     });
+    
+    console.log("Found user:", user ? `ID: ${user.id}, Role: ${user.role}` : "No user found");
+    
     if (!user) return res.status(400).json({ error: "User not found" });
 
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("Password match:", isMatch);
+    
     if (!isMatch) return res.status(400).json({ error: "Invalid password" });
 
-    // ✅ Generate JWT with role
+    // Generate JWT with role
     const token = generateToken({ id: user.id, role: user.role });
+    
+    console.log("Generated token (first 20 chars):", token.substring(0, 20) + "...");
 
     res.json({
-  message: user.role === "admin" ? "Admin login successful" : "Login successful",
-  role: user.role,
-  token,
-  user: {
-      id: user.id,
-      username: user.username,
-      email: user.email,
+      message: user.role === "admin" ? "Admin login successful" : "Login successful",
       role: user.role,
-      address: user.address,
-      phone: user.phone,
-      city: user.city,
-      postalCode: user.postalCode,
-      country: user.country,
-      avatar: user.avatar,
-    },
-  });
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        address: user.address,
+        phone: user.phone,
+        city: user.city,
+        postalCode: user.postalCode,
+        country: user.country,
+        avatar: user.avatar,
+      },
+    });
   } catch (err) {
+    console.error("Login error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// Get user profile
+// Get user profile - FIXED: Changed authenticate to authenticateUser
 router.get("/profile", authenticateUser, async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await User.findByPk(userId, {
-      attributes: { exclude: ['password'] } // Don't send password back
+      attributes: { exclude: ['password'] }
     });
 
     if (!user) {
@@ -145,7 +153,7 @@ router.put("/profile", authenticateUser, async (req, res) => {
 
     // Fetch updated user data
     const updatedUser = await User.findByPk(userId, {
-      attributes: { exclude: ['password'] } // Don't send password back
+      attributes: { exclude: ['password'] }
     });
 
     res.json({
@@ -167,10 +175,11 @@ router.post("/avatar", authenticateUser, upload.single("avatar"), async (req, re
       return res.status(400).json({ error: "No file uploaded" });
     }
 
-     console.log('Uploaded file:', req.file); // Add logging
+    console.log('Uploaded file:', req.file);
     // Update user avatar path
     const avatarPath = `/uploads/avatars/${req.file.filename}`;
-    console.log('Avatar path:', avatarPath); // Add logging
+    console.log('Avatar path:', avatarPath);
+    
     const [updatedRowsCount] = await User.update(
       { avatar: avatarPath },
       { where: { id: userId } }
@@ -185,7 +194,7 @@ router.post("/avatar", authenticateUser, upload.single("avatar"), async (req, re
       attributes: { exclude: ['password'] }
     });
 
-    console.log('Updated user avatar:', updatedUser.avatar); // Add logging
+    console.log('Updated user avatar:', updatedUser.avatar);
 
     res.json({
       message: "Avatar uploaded successfully",
@@ -234,6 +243,14 @@ router.put("/change-password", authenticateUser, async (req, res) => {
     console.error("Password change error:", err);
     res.status(500).json({ error: "Failed to change password" });
   }
+});
+
+// Add this to user.routes.js
+router.get("/test-auth", authenticateUser, (req, res) => {
+  res.json({ 
+    message: "Authentication successful!",
+    user: req.user 
+  });
 });
 
 module.exports = router;

@@ -1,16 +1,12 @@
-const jwt = require("jsonwebtoken");
-const SECRET_KEY = process.env.JWT_SECRET || "supersecret";
+// utils/jwt.js
+const jwt = require('jsonwebtoken');
 
-function generateToken(payload) {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: "1h" });
-}
+const generateToken = (payload) => {
+  return jwt.sign(
+    payload,
+    process.env.JWT_SECRET || 'your-super-secret-key-here-make-it-long-and-random',
+    { expiresIn: '7d' }
+  );
+};
 
-function verifyToken(token) {
-  try {
-    return jwt.verify(token, SECRET_KEY);
-  } catch {
-    return null;
-  }
-}
-
-module.exports = { generateToken, verifyToken };
+module.exports = { generateToken };

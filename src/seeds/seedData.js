@@ -320,7 +320,7 @@ const seedData = async () => {
         total: (10.00 * 1) + (25.00 * 1) + (15.00 * 2) + (19.00 * 1), // 10 + 25 + 30 + 19 = 84
         status: "Completed",
         paymentMethod: "QR Code",
-        paymentProof: "/uploads/payment3.png",
+        paymentProof: "/payment3.png",
         deliveryAddress: "789 Broadway, Cityville, Country",
         contactNumber: "+1234567890",
         email: "alice@example.com",

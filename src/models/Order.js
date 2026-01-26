@@ -45,6 +45,6 @@ const Order = sequelize.define("Order", {
 
 // Keep associations but note that items are stored as JSON
 Order.belongsTo(User, { foreignKey: "userId" });
-Order.belongsTo(Product, { foreignKey: "productId" });
+User.hasMany(Order, { foreignKey: "userId" });
 
 module.exports = Order;
