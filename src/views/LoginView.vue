@@ -6,7 +6,13 @@ import { useUserStore } from "../stores/user";
 const router = useRouter();
 const userStore = useUserStore();
 
-const loginData = ref({
+interface LoginData {
+  username: string;
+  email: string;
+  password: string;
+}
+
+const loginData = ref<LoginData>({
   username: "",
   email: "",
   password: "",
@@ -24,7 +30,7 @@ const handleLogin = async () => {
   if (!isFormValid.value) return;
 
   try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
+    const response = await fetch("http://localhost:5000/api/users/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -42,24 +48,55 @@ const handleLogin = async () => {
       return;
     }
 
-    // ✅ FIX
+    // Store authentication data
     userStore.setToken(result.token);
     userStore.setUser(result.user);
+
+    // Store in localStorage
+    localStorage.setItem("token", result.token);
+    localStorage.setItem("user", JSON.stringify(result.user));
     localStorage.setItem("userId", result.user.id);
     localStorage.setItem("userRole", result.user.role);
 
-    // ✅ REDIRECT
-   if (result.user.role === "admin") {
-      router.push("/adminDashboard");
+    console.log("User role:", result.user.role);
+    console.log("Stored user:", result.user);
+
+    // REDIRECT with debugging
+    if (result.user.role === "admin") {
+      console.log("Redirecting admin to dashboard...");
+
+      // Try multiple possible paths
+      const adminPaths = [ '/adminDashboard'];
+      let redirectSuccessful = false;
+
+      for (const path of adminPaths) {
+        try {
+          await router.push(path);
+          console.log(`Successfully redirected to ${path}`);
+          redirectSuccessful = true;
+          break;
+        } catch (routerError: any) {
+          console.log(`Path ${path} failed:`, routerError.message);
+          continue;
+        }
+      }
+
+      if (!redirectSuccessful) {
+        // Show current routes for debugging
+        const routes = router.getRoutes();
+        console.log("Available routes:", routes.map((r: any) => r.path));
+        alert("Admin dashboard not found. Please check the route configuration.");
+        router.push("/"); // Fallback to home
+      }
     } else {
+      console.log("Redirecting regular user to dashboard...");
       router.push("/user/dashboard");
     }
-  } catch (err) {
-    console.error(err);
+  } catch (err: any) {
+    console.error("Login error:", err);
     alert("Server error, please try again later.");
   }
 };
-
 
 const togglePasswordVisibility = () => {
   passwordVisible.value = !passwordVisible.value;
@@ -69,7 +106,6 @@ const goToSignup = () => {
   router.push("/signup");
 };
 </script>
-
 
 
 <template>

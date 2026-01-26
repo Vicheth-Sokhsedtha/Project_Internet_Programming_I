@@ -175,10 +175,17 @@
           </div>
 
           <div v-else-if="orders.length === 0" class="no-orders">
-            <p>No orders yet</p>
-            <button @click="$router.push('/product')" class="shop-btn">
-               Start Shopping
-            </button>
+            <p v-if="errorMessage">{{ errorMessage }}</p>
+            <p v-else>No orders yet</p>
+
+            <div class="order-actions">
+              <button @click="fetchUserOrders" class="retry-btn">
+                Retry Loading Orders
+              </button>
+              <button @click="$router.push('/product')" class="shop-btn">
+                 Start Shopping
+              </button>
+            </div>
           </div>
 
           <div v-else class="orders-list">
@@ -246,15 +253,45 @@
                 <button @click="contactSupport(order)" class="support-btn">
                   Contact Support
                 </button>
+                <button
+                  v-if="order.receiptUrl || order.hasReceipt"
+                  @click="viewReceipt(order.id)"
+                  class="receipt-btn"
+                >
+                  View Receipt
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Receipt Modal -->
+    <div v-if="showReceiptModal" class="receipt-modal">
+      <div class="modal-overlay" @click="closeReceiptModal"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Order Receipt</h3>
+          <button @click="closeReceiptModal" class="close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <img
+            v-if="selectedReceipt"
+            :src="selectedReceipt"
+            alt="Receipt"
+            class="receipt-image"
+            @error="handleImageError"
+          />
+          <p v-else>Receipt not available</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeReceiptModal" class="modal-close-btn">Close</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
@@ -270,13 +307,56 @@ const error = ref("");
 const errorMessage = ref("");
 const successMessage = ref("");
 
-const passwordData = ref({
+// Add receipt modal state
+const showReceiptModal = ref(false);
+const selectedReceipt = ref<string | null>(null);
+
+// TypeScript interfaces
+interface OrderItem {
+  id?: number;
+  productId?: number;
+  productName?: string;
+  size?: string;
+  productSize?: string;
+  quantity?: number;
+  price?: number;
+  image?: string;
+  qty?: number;
+}
+
+interface Order {
+  id: number;
+  orderNumber?: string;
+  date?: string;
+  createdAt?: string;
+  total?: number;
+  status?: string;
+  paymentProof?: string;
+  receiptUrl?: string;
+  hasReceipt?: boolean;
+  items?: OrderItem[];
+  productName?: string;
+  productImage?: string;
+  productSize?: string;
+  quantity?: number;
+  price?: number;
+  username?: string;
+  userId?: number;
+}
+
+interface PasswordData {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+const passwordData = ref<PasswordData>({
   currentPassword: "",
   newPassword: "",
   confirmPassword: "",
 });
 
-const orders = ref<any[]>([]);
+const orders = ref<Order[]>([]);
 
 // Computed property for avatar URL
 const avatarUrl = computed(() => {
@@ -346,41 +426,120 @@ const handleAvatarChange = async (event: Event) => {
   }
 };
 
+
+
 // Fetch user orders
 const fetchUserOrders = async () => {
   ordersLoading.value = true;
+  errorMessage.value = "";
+
   try {
     const token = userStore.token || localStorage.getItem("token");
-    const userId = userStore.user?.id;
 
-    if (!userId) {
-      console.error("User ID not found");
+    if (!token) {
+      errorMessage.value = "Authentication required. Please login again.";
+      ordersLoading.value = false;
       return;
     }
 
-    const response = await fetch(
-      `http://localhost:5000/api/orders/user-history`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-      }
-    );
+    // Use the correct endpoint
+    const endpoint = `http://localhost:5000/api/orders/user-history`;
+
+    console.log("Fetching orders from:", endpoint);
+
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    });
+
+    console.log("Response status:", response.status);
 
     if (response.ok) {
       const data = await response.json();
-      orders.value = Array.isArray(data) ? data : [];
+      console.log("Orders data received:", data);
+
+      // Process orders with proper structure
+      orders.value = data.map((order: any) => {
+        // Calculate total from items if available
+        let total = order.total || 0;
+        if (order.items && order.items.length > 0) {
+          total = order.items.reduce((sum: number, item: OrderItem) => {
+            return sum + ((item.price || 0) * (item.quantity || 0));
+          }, 0);
+        }
+
+        return {
+          id: order.id,
+          orderNumber: order.orderNumber || `ORD-${order.id}`,
+          date: order.date || order.createdAt || new Date().toISOString(),
+          status: order.status || 'Pending',
+          total: total,
+          items: order.items || [],
+          paymentProof: order.paymentProof,
+          // Add receipt info
+          receiptUrl: order.paymentProof ? `http://localhost:5000/uploads/${order.paymentProof}` : null,
+          hasReceipt: !!order.paymentProof
+        };
+      }).sort((a: Order, b: Order) => {
+        const dateA = new Date(a.date || "").getTime();
+        const dateB = new Date(b.date || "").getTime();
+        return dateB - dateA; // Newest first
+      });
+
+      console.log("Processed orders:", orders.value);
     } else {
-      console.error("Failed to fetch orders");
+      if (response.status === 401 || response.status === 403) {
+        errorMessage.value = "Session expired. Please login again.";
+        userStore.logout();
+        router.push("/login");
+      } else {
+        const errorData = await response.json();
+        errorMessage.value = errorData.error || "Failed to load orders";
+      }
     }
   } catch (err) {
     console.error("Error fetching orders:", err);
-    errorMessage.value = "Failed to load your orders. Please try again.";
+    errorMessage.value = "Network error. Please check your connection.";
   } finally {
     ordersLoading.value = false;
+    setTimeout(() => {
+      errorMessage.value = "";
+    }, 5000);
   }
+};
+
+
+
+// View receipt image
+const viewReceipt = async (orderId: number) => {
+  try {
+    // Find the order
+    const order = orders.value.find(o => o.id === orderId);
+
+    if (order?.receiptUrl) {
+      selectedReceipt.value = order.receiptUrl;
+      showReceiptModal.value = true;
+    } else if (order?.paymentProof) {
+      selectedReceipt.value = `http://localhost:5000/uploads/${order.paymentProof}`;
+      showReceiptModal.value = true;
+    } else {
+      errorMessage.value = "No receipt available for this order";
+      setTimeout(() => errorMessage.value = "", 3000);
+    }
+  } catch (err) {
+    console.error("Error loading receipt:", err);
+    errorMessage.value = "Error loading receipt. Please try again.";
+    setTimeout(() => errorMessage.value = "", 3000);
+  }
+};
+
+// Close receipt modal
+const closeReceiptModal = () => {
+  showReceiptModal.value = false;
+  selectedReceipt.value = null;
 };
 
 // Update profile
@@ -514,9 +673,9 @@ const cancelOrder = async (orderId: number) => {
 };
 
 // Contact support
-const contactSupport = (order: any) => {
+const contactSupport = (order: Order) => {
   const subject = `Support Request for Order #${order.orderNumber || order.id}`;
-  const body = `Hello Support Team,\n\nI need assistance with my order:\n\nOrder ID: ${order.orderNumber || order.id}\nDate: ${formatDate(order.date || order.createdAt)}\nStatus: ${order.status}\nTotal: $${order.total?.toFixed(2)}\n\nIssue description:\n`;
+  const body = `Hello Support Team,\n\nI need assistance with my order:\n\nOrder ID: ${order.orderNumber || order.id}\nDate: ${formatDate(order.date || order.createdAt || '')}\nStatus: ${order.status}\nTotal: $${order.total?.toFixed(2) || '0.00'}\n\nIssue description:\n`;
   window.location.href = `mailto:support@example.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 };
 
@@ -547,6 +706,21 @@ const redirectToLogin = () => {
   router.push("/login");
 };
 
+// Check if user is admin
+const isAdmin = computed(() => {
+  return userStore.user?.role === 'admin' || userStore.user?.role === 'Admin';
+});
+
+// Get display username (for admin view)
+const getDisplayUsername = (order: Order) => {
+  // For admin: show the actual customer username
+  // For customer: show their own username
+  if (isAdmin.value && order.username) {
+    return order.username; // This should be the customer's username from backend
+  }
+  return userStore.user?.username || 'Customer';
+};
+
 // Load data on mount
 onMounted(async () => {
   try {
@@ -557,12 +731,16 @@ onMounted(async () => {
   } catch (err) {
     console.error("Failed to load dashboard:", err);
     error.value = "Failed to load your profile. Please try again.";
+
+    // Try to fetch orders anyway
+    setTimeout(() => {
+      fetchUserOrders();
+    }, 1000);
   } finally {
     loading.value = false;
   }
 });
 </script>
-
 <style scoped>
 /* Base Styles */
 .dashboard {
@@ -851,6 +1029,23 @@ h2 {
   transform: translateY(-2px);
 }
 
+.retry-btn {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-right: 10px;
+}
+
+.retry-btn:hover {
+  background: #d97706;
+  color: white;
+}
+
 .orders-list {
   display: flex;
   flex-direction: column;
@@ -996,6 +1191,116 @@ h2 {
   color: white;
 }
 
+.receipt-btn {
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 10px;
+}
+
+.receipt-btn:hover {
+  background: #0369a1;
+  color: white;
+}
+
+/* Receipt Modal Styles */
+.receipt-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #1e293b;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #64748b;
+  transition: color 0.3s;
+}
+
+.close-btn:hover {
+  color: #dc2626;
+}
+
+.modal-body {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.receipt-image {
+  width: 100%;
+  max-height: 50vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e2e8f0;
+  text-align: right;
+}
+
+.modal-close-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.modal-close-btn:hover {
+  background: #5a6fd8;
+}
+
 /* Loading States */
 .loading {
   text-align: center;
@@ -1046,6 +1351,17 @@ h2 {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

@@ -117,21 +117,28 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed } from "vue";
-import { useCartStore } from "../stores/cart"; // adjust path if needed
+import { useCartStore } from "../stores/cart";
+import { useUserStore } from "../stores/user"; // Import user store
+import { useRouter } from "vue-router"; // Import router
 
 export default defineComponent({
   name: "CheckoutCart",
   setup() {
     const cartStore = useCartStore();
+    const userStore = useUserStore(); // Get user store
+    const router = useRouter(); // Get router
 
     const receiptFile = ref<File | null>(null);
     const locationFile = ref<File | null>(null);
     const isProcessing = ref(false);
-
-
     const storedLocation = ref("");
     const contactNumber = ref("");
     const email = ref("");
+
+    // Use user's email by default
+    if (userStore.user?.email) {
+      email.value = userStore.user.email;
+    }
 
     const discount = computed(() => 0);
     const delivery = computed(() => 5);
@@ -154,6 +161,7 @@ export default defineComponent({
     };
 
     const pay = async () => {
+      // Validation
       if (!receiptFile.value) {
         alert("⚠️ Payment receipt is required. Please upload your receipt before proceeding.");
         return;
@@ -171,6 +179,14 @@ export default defineComponent({
         return;
       }
 
+      // Check if user is logged in
+      const token = userStore.token || localStorage.getItem('token');
+      if (!token) {
+        alert("🔑 Please login first to place an order.");
+        router.push('/login');
+        return;
+      }
+
       isProcessing.value = true;
       try {
         const formData = new FormData();
@@ -182,27 +198,40 @@ export default defineComponent({
         formData.append("items", JSON.stringify(cartStore.items));
         formData.append("total", total.value.toString());
 
-        await fetch("/api/orders", {
+        const response = await fetch("http://localhost:5000/api/orders", {
           method: "POST",
+          headers: {
+            'Authorization': `Bearer ${token}` // ADD THIS LINE
+          },
           body: formData,
         });
 
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Failed to create order");
+        }
+
         alert("✅ Payment submitted successfully! Thank you for your order.");
         cartStore.clearCart();
-      } catch (err) {
-        console.error(err);
-        alert("❌ Something went wrong while submitting your payment. Please try again.");
+
+        // Redirect to user dashboard or order confirmation
+        router.push('/user/dashboard');
+
+      } catch (err: any) {
+        console.error("Order creation error:", err);
+        alert(`❌ ${err.message || "Something went wrong while submitting your payment. Please try again."}`);
       } finally {
         isProcessing.value = false;
       }
     };
 
     const goToProductPage = () => {
-      window.location.href = "/products";
+      router.push('/products');
     };
 
     const goToCart = () => {
-      window.location.href = "/cart";
+      router.push('/cart');
     };
 
     return {
@@ -223,7 +252,6 @@ export default defineComponent({
   },
 });
 </script>
-
 <style scoped>
 .checkout-cart {
   max-width: 900px;

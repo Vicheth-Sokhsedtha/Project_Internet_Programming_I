@@ -92,7 +92,7 @@ const routes = [
 {
   path: "/adminDashboard",
   name: "adminDashboard",
-  component: AdminDashboard,
+  component: () => import("../views/admin/AdminDashboard.vue"),
   meta: { requiresAuth: true, requiresAdmin: true }
 },
 {
@@ -112,17 +112,6 @@ const routes = [
 
 ];
 
-// const router = createRouter({
-//   history: createWebHistory(),
-//   routes
-// });
-
-// const router = createRouter({
-//   history: createWebHistory(),
-//   routes,
-//   linkActiveClass: 'active',        // applied when route starts with link
-//   linkExactActiveClass: 'exact-active' // applied only on exact match
-// })
 
 const router = createRouter({
   history: createWebHistory(),
@@ -138,22 +127,25 @@ const router = createRouter({
   }
 })
 
+// In router/index.js, after creating router
 router.beforeEach((to, from, next) => {
-  const userId = localStorage.getItem("userId");
-  const userRole = localStorage.getItem("userRole");
+  // Check if route requires auth
+  if (to.meta.requiresAuth) {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  console.log("[router] to:", to.name, "userId:", userId, "role:", userRole);
+    if (!token) {
+      // Not logged in, redirect to login
+      next('/login');
+      return;
+    }
 
-  // 🔐 Requires login
-  if (to.meta.requiresAuth && !userId) {
-    console.log("[router] requiresAuth → redirect to login");
-    return next({ name: "login" });
-  }
-
-  // 🔐 Requires admin
-  if (to.meta.requiresAdmin && userRole !== "admin") {
-    console.log("[router] requiresAdmin but not admin → redirect home");
-    return next({ name: "home" });
+    // Check if route requires admin
+    if (to.meta.requiresAdmin && user.role !== 'admin') {
+      // Not an admin, redirect to home or user dashboard
+      next('/user/dashboard');
+      return;
+    }
   }
 
   next();

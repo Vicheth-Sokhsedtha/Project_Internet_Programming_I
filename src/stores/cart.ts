@@ -11,6 +11,9 @@ export interface CartItem {
   quality?: number;
 }
 
+
+
+
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([]);
 
@@ -75,6 +78,8 @@ export const useCartStore = defineStore('cart', () => {
     items.value.filter(i =>
       i.name.toLowerCase().includes(name.toLowerCase())
     );
+
+
 
   return {
     items,
